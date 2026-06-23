@@ -12,3 +12,6 @@ venv/
 sandboxes/*/state/*
 !sandboxes/*/state/.gitkeep
 !sandboxes/*/state/.gitignore
+
+# generated trace outputs from running selftests (the committed *-fold-in-gate.record.json stay tracked)
+sandboxes/*/trace/*selftest*
