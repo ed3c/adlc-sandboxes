@@ -9,6 +9,7 @@
 ![runtime](https://img.shields.io/badge/runtime-python3-blue)
 ![API keys](https://img.shields.io/badge/API_keys-zero-success)
 ![status](https://img.shields.io/badge/status-raw__mirror_showcase-lightgrey)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 <br>
 
@@ -194,6 +195,12 @@ adlc-sandboxes/
   count_metric）裁，不是 agent 的散文宣稱。
 - **compose 既有層、不造新引擎**：每個沙盒只新增最小的那一塊（如 self-correcting-loop 只新增 DECIDE 閘，
   PLAN/DO/VERIFY 復用既有 loop 層）。
+
+---
+
+## License
+
+MIT — see [`LICENSE`](LICENSE). 涵蓋本 repo 的沙盒代碼與文檔；`research/` 的 DR 是外部研究綜述（raw，非 vetted fact），保留原作脈絡。
 
 ---
 
