@@ -1,0 +1,66 @@
+{
+  "schema": "fold-in-gate/v1",
+  "iso": "2026-06-18",
+  "sandbox": "turbovec",
+  "sandbox_dir": "sandboxes/turbovec",
+  "tiers_run": [
+    "static",
+    "qa",
+    "runtime"
+  ],
+  "static": {
+    "ok": true,
+    "detail": "C1-C5 + qa_fixture + runtime_trace_cmd all present",
+    "checks": [
+      {
+        "id": "C1",
+        "ok": true,
+        "msg": "frontmatter name/description/allowed-tools present and name=='turbovec' (got 'turbovec')"
+      },
+      {
+        "id": "C2",
+        "ok": true,
+        "msg": ">=1 `!`cmd`` dynamic injection (not a bare KEY=!`cmd`)"
+      },
+      {
+        "id": "C3",
+        "ok": true,
+        "msg": "causal-chain.md non-placeholder=True, absorption-form.md non-placeholder=True"
+      },
+      {
+        "id": "C5",
+        "ok": true,
+        "msg": "manifest exposed_capabilities non-empty + launch.command/triggers/precondition present"
+      },
+      {
+        "id": "C4",
+        "ok": true,
+        "msg": "keys_ok=True wiring_ok=True three-way name(dir=turbovec,block=turbovec,fm=turbovec)=True"
+      },
+      {
+        "id": "qa-fixture",
+        "ok": true,
+        "msg": "qa fixture present at qa.golden.yaml (contract MUST)"
+      },
+      {
+        "id": "runtime_trace_cmd",
+        "ok": true,
+        "msg": "manifest declares runtime_trace_cmd"
+      }
+    ]
+  },
+  "qa": {
+    "ok": true,
+    "detail": "3/3 cases match expected_current",
+    "reg_bad": []
+  },
+  "runtime": {
+    "ok": true,
+    "detail": "runtime_trace_cmd exit 0",
+    "cmd": "python3 src/containment_rag_probe.py -n ns-sandbox",
+    "exit": 0,
+    "trace": "trace/2026-06-18-fold-in.trace.json"
+  },
+  "verdict": "LIVE",
+  "exit_code": 0
+}

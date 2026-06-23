@@ -1,0 +1,8 @@
+{
+  "_provenance": "the user's own example rubric (cc-20260623 task): a popular-science article on ZKP. Bundled so selftest exercises decide() against a concrete, human-meaningful rubric.",
+  "criteria": [
+    {"id": "professional", "threshold": 8, "description": "正確解釋『非交互式』與『知識證明』的核心物理意義，無學術硬傷"},
+    {"id": "readability", "threshold": 8, "description": "600-800 字，使用『保險箱與鑰匙』生活比喻，段落過渡自然"},
+    {"id": "layout", "threshold": 8, "description": "排版自然，嚴禁以無聊的項目符號平鋪直敘"}
+  ]
+}

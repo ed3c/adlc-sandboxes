@@ -1,0 +1,17 @@
+# sandboxes/openshell-containment/manifest.yaml — machine-parsable interface declaration.
+# fold_in_sandbox_gate static tier parses exposed_capabilities + launch + runtime_trace_cmd + qa_fixture.
+name: openshell-containment                  # == dir == SKILL.md frontmatter name == /command
+exposed_capabilities:
+  - "enforced-containment exec: run agent-generated code under OpenShell default-deny egress + fs isolation (src/sandbox_runner.py)"
+  - "adversarial containment verification: containment_probe 3-case suite (egress/fs/legit), count_metric==0 = fully contained, report-only DDR-031"
+launch:
+  command: /openshell-containment
+  triggers: [containment, sandbox, egress, isolation, openshell]
+  precondition: "!`bash sandboxes/openshell-containment/src/openshell_gateway_bootstrap.sh status`"   # gateway Connected → exit 0; else exit 2 (fail-loud, know-how #13)
+src_entry: src/containment_probe.py
+# runtime tier runs this with cwd=sandbox dir. containment_probe self-fail-louds (RuntimeError→exit 1)
+# when gateway down / sandbox not Ready — exactly the gate's env-fail precondition path. exit 0 + "0"
+# printed = fully contained. --count prints ONLY the metric (no stray cwd-relative record dir); the
+# fold-in gate's own trace/<iso>-fold-in.trace.json captures the exit code + stdout tail.
+runtime_trace_cmd: "python3 src/containment_probe.py -n ns-sandbox --count"
+qa_fixture: tests/qa.golden.yaml

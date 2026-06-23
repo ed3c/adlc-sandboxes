@@ -1,0 +1,14 @@
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# os
+.DS_Store
+
+# sandbox runtime artifacts (state dirs keep only .gitkeep + their own .gitignore)
+sandboxes/*/state/*
+!sandboxes/*/state/.gitkeep
+!sandboxes/*/state/.gitignore

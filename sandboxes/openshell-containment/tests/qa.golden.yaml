@@ -1,0 +1,25 @@
+# sandboxes/openshell-containment/tests/qa.golden.yaml
+# fold_in_sandbox_gate qa tier: BOW-cosine each query vs this sandbox's SKILL.md routing surface
+# (description + triggers), deterministic, no Ollama. actual = trigger if cosine > min_score else no_trigger.
+# regression (PG-214 behavioral-golden): exit 0 iff every actual == expected_current.
+schema: sandbox-qa-golden/v1
+min_score: 0.05
+cases:
+  # should-trigger: queries that share real tokens with the containment routing surface
+  - id: QA-01
+    query: "run the containment probe suite against the openshell sandbox"
+    ground_truth: trigger
+    expected_current: trigger
+  - id: QA-02
+    query: "verify default-deny egress isolation is enforced in the sandbox"
+    ground_truth: trigger
+    expected_current: trigger
+  - id: QA-03
+    query: "execute agent code under enforced containment with filesystem isolation"
+    ground_truth: trigger
+    expected_current: trigger
+  # should-not-trigger: unrelated query (anti over-trigger, PG-103 routing pollution)
+  - id: QA-04
+    query: "summarize the quarterly marketing budget spreadsheet"
+    ground_truth: no_trigger
+    expected_current: no_trigger

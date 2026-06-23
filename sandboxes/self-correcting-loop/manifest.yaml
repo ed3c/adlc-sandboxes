@@ -1,0 +1,15 @@
+# sandboxes/self-correcting-loop/manifest.yaml — machine-parsable interface declaration.
+# fold_in_sandbox_gate static tier parses exposed_capabilities + launch + runtime_trace_cmd + qa_fixture.
+name: self-correcting-loop                   # == dir == SKILL.md frontmatter name == /command
+exposed_capabilities:
+  - "deterministic DECIDE gate for a PLAN/DO/VERIFY/DECIDE self-correcting loop: FINAL iff every rubric criterion score >= its threshold, else ITERATING + weakest-criterion focus (DDR-031, zero LLM-judge)"
+  - "bounded loop-state tracking: no-progress plateau + max-iteration exhaustion SURFACE guards (anti-infinite-loop; autoresearch Iterations form, composed not rebuilt)"
+launch:
+  command: /self-correcting-loop
+  triggers: [self-correcting-loop, 自我修正迴圈, rubric-gate, plan-do-verify-decide, 迭代收斂]
+  precondition: "!`python3 --version`"        # python present → exit 0; else fail-loud (no fake decision)
+src_entry: src/loop_kernel.py
+# runtime tier runs this with cwd=sandbox dir. selftest exercises decide() against bundled fixtures
+# (FINAL / ITERATING+focus / fail-loud) and exits 0 iff the kernel behaves correctly. Deterministic.
+runtime_trace_cmd: "python3 src/loop_kernel.py selftest --iso 2026-06-23"
+qa_fixture: tests/qa.golden.yaml

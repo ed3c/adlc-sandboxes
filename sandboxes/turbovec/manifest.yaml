@@ -1,0 +1,12 @@
+name: turbovec                              # == dir 名 == SKILL.md frontmatter name == /command
+exposed_capabilities:
+  - "air-gapped local vector search: build a turbovec index + self-query INSIDE ns-sandbox under default-deny egress (count_metric==0 = nothing leaves the machine)"
+  - "offline capability landing: turbovec staged into ns-sandbox via wheel upload (abi3), runs with zero network — composes openshell-containment"
+launch:
+  command: /turbovec
+  triggers: [vector-index, air-gapped-rag, turbovec, embedded-vector, local-rag]
+  precondition: "!`bash sandboxes/openshell-containment/src/openshell_gateway_bootstrap.sh status`"
+src_entry: src/containment_rag_probe.py
+# runtime tier teeth: exit 0 IFF count_metric==0 (turbovec works AND egress denied). cwd=sandbox dir.
+runtime_trace_cmd: "python3 src/containment_rag_probe.py -n ns-sandbox"
+qa_fixture: tests/qa.golden.yaml
