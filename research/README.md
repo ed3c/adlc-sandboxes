@@ -12,6 +12,8 @@
 
 `self-correcting-loop` **無對應 DR**——它的外部概念來自使用者的 prompt 協定（PLAN/DO/VERIFY/DECIDE 四步），非一份 DR。
 
+**👉 想知道「DR 講的哪些是跑 `/command` 真兌現了、哪些是 overstated」** → [`DR-TO-RUN-MAP.md`](DR-TO-RUN-MAP.md)（DR 願景 ↔ RUN.md 真實結果的逐條對應；✅ 達成 / ⚠ 部分 / ❌ 未驗證或已裁）。
+
 ## ⚠ 誠實邊界（重要 — 別把 DR 當事實）
 
 - 這些是**原始 DR 綜述**（raw Gemini DR export），**不是經查證的事實**。落地吸收時對它們做過 external-verify
