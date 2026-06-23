@@ -5,13 +5,13 @@ iso: "2026-06-11"
 absorption_chain:
   form: "獨立沙盒落地吸收"   # CONTEXT.md 兩類吸收形式之 ①；最終命名以 slice 01 落地為準
   source_dr: "local_stack/docs/research/自主代理技術的解耦與重構：基於 NVIDIA Open Shell 安全執行期與 LangChain Deep Agents 的零信任架構深度研究報告.md"
-  bridge_ref: ".claude/skills/mega-flow-harness-hub/harness-component/decouple-zero-trust-dr/method-problem-bridge.yaml"
+  bridge_ref: "<private — northstar skill layer, not mirrored — internal security-architecture mirror>"
   run_records:
     - "data/production/flywheel-runs/2026-06-11-decouple-dr.flywheel-run.yaml"
     - "data/production/flywheel-runs/2026-06-11-decouple-dr.manifest.json"
     - "data/production/flywheel-runs/2026-06-11-adlc-sandbox.flywheel-run.yaml"
   fold_in_targets:
-    - ".claude/skills/mega-flow-harness-hub/modules/adlc-lifecycle.md"
+    - "<private — northstar skill layer, not mirrored>"
   land_plan_ref: "docs/plans/2026-06-11-adlc-sandbox"
 ---
 
@@ -19,7 +19,7 @@ absorption_chain:
 
 > CONTEXT「吸收形式因果鏈」義：flywheel 從此沙盒**吸收了什麼形式**（C5 那套）。
 > **與 `causal-chain.md`（沙盒內因果鏈）是兩份**（用戶明示，禁合併）。
-> 鏈進既有 bridge：`.claude/skills/mega-flow-harness-hub/harness-component/decouple-zero-trust-dr/method-problem-bridge.yaml`。
+> 鏈進既有 bridge（northstar 私有 skill 層，含內部安全架構 mirror，未隨附）。
 
 ## flywheel 吸收的形式
 

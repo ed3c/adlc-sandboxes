@@ -9,7 +9,6 @@ bounded-loop guard (no-progress plateau / exhaustion) is exercised.
 Related docs:
 - Implementation: sandboxes/self-correcting-loop/src/loop_kernel.py
 - Interface contract: sandboxes/self-correcting-loop/SKILL.md (C1-C5)
-- Loop governance: .claude/skills/adlc/skill.md S1/S3
 """
 import sys
 from pathlib import Path

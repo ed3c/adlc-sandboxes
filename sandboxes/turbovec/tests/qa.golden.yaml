@@ -1,5 +1,5 @@
 schema: sandbox-qa-golden/v1
-min_score: 0.05                              # BOW cosine 觸發門檻（fold_in_sandbox_gate qa tier，可省略則用 DEFAULT_QA_FLOOR）
+min_score: 0.05                              # BOW cosine 觸發門檻（qa tier，可省略則用 DEFAULT_QA_FLOOR）
 cases:
   # should-trigger：該觸發本沙盒能力（與 SKILL.md description/triggers 真詞重疊）
   - id: QA-01
@@ -10,7 +10,7 @@ cases:
     query: "search embeddings locally with zero data egress, embedded vector store"
     ground_truth: trigger
     expected_current: trigger
-  # should-not-trigger：無關 query（反過度觸發 PG-103；用 solo-pipeline 的表面詞）
+  # should-not-trigger：無關 query（over-trigger guard；用一個無關沙盒的表面詞）
   - id: QA-03
     query: "render a land-plan slice set to an annotatable HTML for plan review"
     ground_truth: no_trigger

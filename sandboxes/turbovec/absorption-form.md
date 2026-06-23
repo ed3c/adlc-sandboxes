@@ -10,7 +10,7 @@ absorption_chain:
     - "data/production/flywheel-runs/2026-06-18T18:01:45Z-turbovec-adlc.flywheel-run.yaml"
   fold_in_targets:
     - "sandboxes/PANORAMA.md"
-    - ".claude/skills/scaffold-liveness-auditor/configs/2026-06-18-turbovec-adlc-scaffold-liveness.yaml"
+    - "<private — northstar skill layer, not mirrored>"
   land_plan_ref: "docs/plans/2026-06-18-turbovec-adlc"
 ---
 

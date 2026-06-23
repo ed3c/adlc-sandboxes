@@ -11,7 +11,7 @@
 | **bridge** | same-problem = 有界自我修正迭代；differential = 把 **DECIDE** 從「LLM 自評自判 FINAL」抽成**確定性閘**（FINAL iff 真實分數 ≥ threshold），治 PG-102 幻覺傳播 / PG-009「結構過了行為沒過」。cohere-not-build：autoresearch=code-metric 實例、/refactor-loop=重構實例，本沙盒=artifact-to-rubric 泛型實例。 | skill_match 重疊 hard data（adlc 2.8 / autoresearch-composer 1.2）→ 裁定 compose 既有層，唯一新增 = 確定性 DECIDE 閘 |
 | **build** | `src/loop_kernel.py` 純函數 kernel：`decide(rubric, scorecard)`（FINAL/ITERATING + 最弱失敗項，tie-break = 低分優先再 declared order）+ `advance()` 有界 loop-state（no-progress plateau + max-iteration exhaustion SURFACE 守衛）+ fail-loud `validate_scorecard`/`load_rubric`。零 Ollama / 零網路 / 零 datetime.now（唯一時戳源 = 顯式 iso 參數）。 | `sandboxes/self-correcting-loop/src/loop_kernel.py`（本 commit） |
 | **對抗驗證** | (1) `selftest` runtime exit 0（decide FINAL / ITERATING+focus / 兩條 fail-loud 全綠）；(2) pytest 25 tests 覆蓋每分支，含 tie-break、no-progress plateau、exhaustion、bool-score 不被當 int、unknown-criterion fail-loud；(3) `fold_in_sandbox_gate` 三層全綠。 | trace `trace/2026-06-23-selftest.json`（ok=true）+ pytest 25 passed + fold-in-gate record（runtime tier exit 0） |
-| **接口暴露** | `.claude/commands/self-correcting-loop.md`（command-only 入口，避被動上下文）+ 本 SKILL.md C2 注入 loop-state 快照。adlc S1 loop registry 第 5 row + S3 DCI 5 條契約 + loop-ledger 雙檔。 | `.claude/commands/self-correcting-loop.md` + `../PANORAMA.md` block + `.claude/skills/adlc/skill.md` S1 row |
+| **接口暴露** | `.claude/commands/self-correcting-loop.md`（command-only 入口，避被動上下文）+ 本 SKILL.md C2 注入 loop-state 快照。adlc S1 loop registry 第 5 row + S3 DCI 5 條契約 + loop-ledger 雙檔。 | `.claude/commands/self-correcting-loop.md` + `../PANORAMA.md` block（adlc 治理 = northstar 私有 skill，未隨附） |
 
 ## 誠實邊界（Slop #18）
 

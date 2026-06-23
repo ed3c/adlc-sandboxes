@@ -1,12 +1,12 @@
 """
 sandbox_runner — thin abstraction over `openshell sandbox exec` to run agent-generated code inside
-the NVIDIA OpenShell Runtime-containment layer (ADLC "develop a sandbox", bridge decouple-zero-trust-dr).
+the NVIDIA OpenShell Runtime-containment layer.
 
-WHY a thin wrapper (not a new engine, Slop #2): northstar's "agent" = skill + hook + dispatch
-composition. When such a composition needs to EXECUTE untrusted/agent-generated code, this is the
-single seam that routes it through the policy-governed sandbox instead of the host. It shells to the
-`openshell` CLI deliberately — OpenShell is alpha (v0.0.59), so northstar stays loosely coupled behind
-this one function and could swap the primitive (e.g. sandbox-exec) without touching callers.
+WHY a thin wrapper (not a new engine, composition over building): when a composition of skills/hooks
+needs to EXECUTE untrusted/agent-generated code, this is the single seam that routes it through the
+policy-governed sandbox instead of the host. It shells to the `openshell` CLI deliberately — OpenShell
+is alpha (v0.0.59), so callers stay loosely coupled behind this one function and could swap the
+primitive (e.g. sandbox-exec) without touching them.
 
 This module is the Build-phase deliverable; containment_probe.py (Test phase) is its first consumer.
 NOT a gate, NOT auto-anything — a library function + a tiny CLI for manual use.
@@ -15,10 +15,9 @@ Determinism / fail-loud: a missing CLI or an unreachable gateway raises (never s
 The returned SandboxResult carries the REAL remote exit code (the CLI exits with the remote command's
 exit code), stdout, stderr — callers classify; this layer does not interpret.
 
-Related docs (migrated cc-20260611 into the openshell-containment sandbox, slice-03 F3):
-- ADLC module: .claude/skills/mega-flow-harness-hub/modules/adlc-lifecycle.md (Runtime layer)
-- Bootstrap: sandboxes/openshell-containment/src/openshell_gateway_bootstrap.sh (same dir)
-- Consumer: sandboxes/openshell-containment/src/containment_probe.py (same dir)
+Related docs (same dir):
+- Bootstrap: sandboxes/openshell-containment/src/openshell_gateway_bootstrap.sh
+- Consumer: sandboxes/openshell-containment/src/containment_probe.py
 """
 from __future__ import annotations
 
@@ -40,7 +39,7 @@ def _openshell_bin() -> str:
         if resolved:
             return resolved
     raise RuntimeError(
-        "openshell CLI not found (tried: %s). Run execution/scripts/openshell_gateway_bootstrap.sh up"
+        "openshell CLI not found (tried: %s). Run sandboxes/openshell-containment/src/openshell_gateway_bootstrap.sh up"
         % ", ".join(_OPENSHELL_CANDIDATES)
     )
 

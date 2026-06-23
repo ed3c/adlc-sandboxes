@@ -6,8 +6,8 @@
 # `pip install --no-index`. The sandbox python is Linux aarch64 / CPython 3.14; turbovec ships cp39-ABI3
 # wheels (forward-compatible) — one wheel works. numpy needs a cp314 aarch64 wheel.
 #
-# Idempotent (re-run safe). FAIL-LOUD (BS #14: real exit via `echo EXIT=$?`, never `| tail` mask).
-# engine-locus: a setup helper, not a gate, not auto-anything.
+# Idempotent (re-run safe). FAIL-LOUD: real exit via `echo EXIT=$?`, never `| tail` mask.
+# This is a setup helper, not a gate, not auto-anything.
 set -u
 OS="${OPENSHELL_BIN:-$(command -v openshell || echo "$HOME/.local/bin/openshell")}"
 SB="${OPENSHELL_SANDBOX_NAME:-ns-sandbox}"

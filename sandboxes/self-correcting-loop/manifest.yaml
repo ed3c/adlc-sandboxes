@@ -1,9 +1,9 @@
 # sandboxes/self-correcting-loop/manifest.yaml — machine-parsable interface declaration.
-# fold_in_sandbox_gate static tier parses exposed_capabilities + launch + runtime_trace_cmd + qa_fixture.
+# The validation gate's static tier parses exposed_capabilities + launch + runtime_trace_cmd + qa_fixture.
 name: self-correcting-loop                   # == dir == SKILL.md frontmatter name == /command
 exposed_capabilities:
-  - "deterministic DECIDE gate for a PLAN/DO/VERIFY/DECIDE self-correcting loop: FINAL iff every rubric criterion score >= its threshold, else ITERATING + weakest-criterion focus (DDR-031, zero LLM-judge)"
-  - "bounded loop-state tracking: no-progress plateau + max-iteration exhaustion SURFACE guards (anti-infinite-loop; autoresearch Iterations form, composed not rebuilt)"
+  - "deterministic DECIDE gate for a PLAN/DO/VERIFY/DECIDE self-correcting loop: FINAL iff every rubric criterion score >= its threshold, else ITERATING + weakest-criterion focus (deterministic, no LLM-judge)"
+  - "bounded loop-state tracking: no-progress plateau + max-iteration exhaustion SURFACE guards (anti-infinite-loop; bounded-iteration form, composes the existing loop layer rather than building a new engine)"
 launch:
   command: /self-correcting-loop
   triggers: [self-correcting-loop, 自我修正迴圈, rubric-gate, plan-do-verify-decide, 迭代收斂]

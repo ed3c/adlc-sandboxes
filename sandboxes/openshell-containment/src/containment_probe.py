@@ -1,34 +1,30 @@
 """
-containment_probe — ADLC Test-phase behavioral evaluator for the OpenShell Runtime-containment layer.
+containment_probe — Test-phase behavioral evaluator for the OpenShell Runtime-containment layer.
 
-WHY: the bridge (decouple-zero-trust-dr) turned the DR's zero-trust thesis into a northstar-shaped
-demand: not "install a sandbox" (symptom) but "PROVE the policy-governed sandbox actually blocks the
-adversarial paths it claims to" (PG-167 meta-demand). northstar's prior containment was
-policy-by-cooperation (hooks the LLM must route through); this probe adversarially verifies the REAL
-OpenShell sandbox at runtime, closing the PG-101/PG-143 activation-gap (does the boundary actually FIRE?).
+WHY: the design intent is not "install a sandbox" (symptom) but "PROVE the policy-governed sandbox
+actually blocks the adversarial paths it claims to". A cooperation-based policy (hooks the code must
+route through) does not prove anything; this probe adversarially verifies the REAL OpenShell sandbox
+at runtime, closing the activation gap — does the boundary actually FIRE?
 
-It runs a fixed set of cases inside a live sandbox and classifies each deterministically (DDR-031 — no
-LLM scoring): ADVERSARIAL cases must be BLOCKED, LEGIT cases must PASS. A "containment failure" is an
+It runs a fixed set of cases inside a live sandbox and classifies each deterministically (no LLM
+scoring): ADVERSARIAL cases must be BLOCKED, LEGIT cases must PASS. A "containment failure" is an
 adversarial case that got through or a legit case that was denied. count_metric = number of failures
 (0 = fully contained). This is the discrimination vector (placebo-guard): against a PERMISSIVE policy
 the egress case would SUCCEED → the predicate flags it → count>0. A no-op/permissive sandbox cannot
 score 0 — see test_containment_probe.py (the classifier is a pure function, unit-tested both ways).
 
-ENGINE-LOCUS: report-only. Never mutates, never auto-fixes. If an adversarial case is NOT blocked it is
-a SURFACED gap (printed + recorded), handed to the human — never patched here.
+Report-only: never mutates, never auto-fixes. If an adversarial case is NOT blocked it is a SURFACED
+gap (printed + recorded), handed to the human — never patched here.
 
-FAIL-LOUD: requires a live gateway + Ready sandbox (precondition, like the PG-215 Ollama-up probe).
-Transport failure (gateway down / sandbox absent) raises → exit 1 = UNRESOLVED, never a silent pass.
+FAIL-LOUD: requires a live gateway + Ready sandbox (precondition). Transport failure (gateway down /
+sandbox absent) raises → exit 1 = UNRESOLVED, never a silent pass.
 
 Determinism: zero clock reads (timestamp from --iso only); fixed case order; pure classifiers → stable
 output on the same sandbox policy.
 
-Related docs (migrated cc-20260611 into the openshell-containment sandbox, slice-03 F3):
-- ADLC module: .claude/skills/mega-flow-harness-hub/modules/adlc-lifecycle.md (Runtime layer, Test phase)
-- Bridge: .claude/skills/mega-flow-harness-hub/harness-component/decouple-zero-trust-dr/method-problem-bridge.yaml
-- Runner: sandboxes/openshell-containment/src/sandbox_runner.py (same dir)
-- Bootstrap: sandboxes/openshell-containment/src/openshell_gateway_bootstrap.sh (same dir)
-- Monitor wiring: execution/scripts/standing-health-probes.yaml (PG-143 sentinel — cmd path updated to sandbox src/)
+Related docs (same dir):
+- Runner: sandboxes/openshell-containment/src/sandbox_runner.py
+- Bootstrap: sandboxes/openshell-containment/src/openshell_gateway_bootstrap.sh
 - Tests: sandboxes/openshell-containment/tests/test_containment_probe.py
 - Sandbox interface: sandboxes/openshell-containment/SKILL.md (/openshell-containment + dynamic injection)
 """
@@ -143,7 +139,7 @@ def _record(iso: str, sandbox: str, verdicts: list[CaseVerdict], out_path: Path)
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="ADLC Test-phase containment evaluator (report-only).")
+    ap = argparse.ArgumentParser(description="Test-phase containment evaluator (report-only).")
     ap.add_argument("-n", "--sandbox", default=DEFAULT_SANDBOX, help="sandbox name (must be Ready)")
     ap.add_argument("--iso", default="", help="deterministic timestamp (caller supplies)")
     ap.add_argument("--timeout", type=int, default=30)
@@ -155,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         verdicts = run_probe(args.sandbox, timeout=args.timeout)
     except RuntimeError as e:
-        # Precondition failure (gateway down / sandbox not Ready) = UNRESOLVED, fail-loud (PG-126 no-silent).
+        # Precondition failure (gateway down / sandbox not Ready) = UNRESOLVED, fail-loud (never silently coerced).
         print(f"✗ containment_probe precondition failure: {e}", file=sys.stderr)
         return 1
 

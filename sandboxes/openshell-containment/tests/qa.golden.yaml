@@ -1,7 +1,7 @@
 # sandboxes/openshell-containment/tests/qa.golden.yaml
-# fold_in_sandbox_gate qa tier: BOW-cosine each query vs this sandbox's SKILL.md routing surface
+# the qa tier: BOW-cosine each query vs this sandbox's SKILL.md routing surface
 # (description + triggers), deterministic, no Ollama. actual = trigger if cosine > min_score else no_trigger.
-# regression (PG-214 behavioral-golden): exit 0 iff every actual == expected_current.
+# behavioral regression baseline: exit 0 iff every actual == expected_current.
 schema: sandbox-qa-golden/v1
 min_score: 0.05
 cases:
@@ -18,7 +18,7 @@ cases:
     query: "execute agent code under enforced containment with filesystem isolation"
     ground_truth: trigger
     expected_current: trigger
-  # should-not-trigger: unrelated query (anti over-trigger, PG-103 routing pollution)
+  # should-not-trigger: unrelated query (anti over-trigger)
   - id: QA-04
     query: "summarize the quarterly marketing budget spreadsheet"
     ground_truth: no_trigger

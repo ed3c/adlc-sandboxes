@@ -1,21 +1,21 @@
-"""containment_rag_probe — ADLC Test-phase evaluator for the turbovec air-gapped RAG sandbox.
+"""containment_rag_probe — Test-phase evaluator for the turbovec air-gapped RAG sandbox.
 
-WHY (PG-167 meta-demand, not symptom): the turbovec DR's load-bearing claim is not "faster than FAISS"
+WHY (the real demand, not symptom): the load-bearing claim for turbovec here is not "faster than FAISS"
 (the primary source shows x86 2-bit is in fact slower) — it is COMPLETELY LOCAL, AIR-GAPPED RAG. This
 probe turns that claim into a machine fact: it runs a real turbovec index+search INSIDE the OpenShell
 ns-sandbox (default-deny egress + fs isolation) and asserts (a) it returns correct self-neighbors AND
 (b) egress is denied during the workload. count_metric==0 ⟺ turbovec works with zero network ⟺ air-gapped.
 
-COMPOSITION (Slop #2 — no new exec engine): reuses openshell-containment's sandbox_runner.run_in_sandbox.
-This is the seam where the turbovec sandbox COMPOSES the containment sandbox.
+COMPOSITION (no new engine — composition over building): reuses openshell-containment's
+sandbox_runner.run_in_sandbox. This is the seam where the turbovec sandbox COMPOSES the containment sandbox.
 
-ENGINE-LOCUS: report-only. A NOT-CONTAINED case is SURFACED (printed + recorded), never auto-fixed.
+REPORT-ONLY: a NOT-CONTAINED case is surfaced (printed + recorded), never auto-fixed.
 FAIL-LOUD: gateway down / sandbox not Ready / turbovec not staged → raise → exit 1 (UNRESOLVED), never a
-silent pass (PG-126). Determinism (DDR-031): fixed case order, pure classifiers, timestamp from --iso only.
+silent pass. Deterministic (no LLM-judge): fixed case order, pure classifiers, timestamp from --iso only.
 
-Discrimination (placebo-guard): a permissive policy would let the egress case SUCCEED → count>0; a no-op
-turbovec would not print recall_at1=1.0 → count>0. count==0 is not reachable by a placebo. Classifiers are
-pure functions, unit-tested both ways (tests/test_containment_rag_probe.py).
+Discrimination (over-trigger guard): a permissive policy would let the egress case SUCCEED → count>0; a
+no-op turbovec would not print recall_at1=1.0 → count>0. count==0 is not reachable by a placebo. Classifiers
+are pure functions, unit-tested both ways (tests/test_containment_rag_probe.py).
 """
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-# COMPOSE openshell-containment: reuse its sandbox_runner (the single exec seam). Slop #2.
+# COMPOSE openshell-containment: reuse its sandbox_runner (the single exec seam) — no new engine.
 _OC_SRC = Path(__file__).resolve().parents[2] / "openshell-containment" / "src"
 sys.path.insert(0, str(_OC_SRC))
 from sandbox_runner import DEFAULT_SANDBOX, SandboxResult, run_in_sandbox  # noqa: E402

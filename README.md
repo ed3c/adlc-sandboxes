@@ -89,6 +89,9 @@ bash run-tests.sh
 ——frontmatter `name`（= `/command` 名）+ `description`（含觸發詞）+ `allowed-tools`（限定 Bash 權限）+ body 用
 `!`cmd`` **dynamic context injection** 在調用時把沙盒當前 runtime 狀態的真 stdout 注入 context。兩條路徑：
 
+> 📂 **想直接看「每個沙盒實際跑起來長什麼樣 / 它在 Claude Code 的生產消費關係」** → 讀
+> [`PRODUCTION-CONSUMPTION.md`](PRODUCTION-CONSUMPTION.md)（總覽）＋ 各 `sandboxes/<name>/RUN.md`（真實 live transcript）。
+
 ### A — 當成 Claude Code skill / `/command` 用
 
 1. **讓 Claude Code 發現它**——把沙盒接成一個 skill：
@@ -97,8 +100,10 @@ bash run-tests.sh
    ln -s "$PWD/sandboxes/self-correcting-loop/SKILL.md" ~/.claude/skills/self-correcting-loop/SKILL.md
    ```
    （或放 project-local 的 `.claude/skills/<name>/SKILL.md`，或在 `settings.json` 把 `sandboxes/` 註冊為 skill 來源。）
-   > northstar 沒自動註冊，純粹是它的 settings.json 沒把 `sandboxes/` 列為 skill root，並**另寫** `.claude/commands/<name>.md`
-   > 入口控制被動上下文載入——**不是 SKILL.md 不能用**。本 repo 沒附那些入口，所以你自己接。
+   > northstar 用 `.claude/commands/<name>.md` 入口控制被動上下文載入；**本 repo 已隨附清理版入口**
+   > （[`.claude/commands/`](.claude/commands/)：`self-correcting-loop.md` + `sandbox-openshell.md`，鏡像時已抹去
+   > 指向私有治理層 / 內部安全 bridge 的路由，見各檔 MIRROR NOTE）。clone 後把本 repo 當 project 開（cwd 在 repo
+   > 根），`/self-correcting-loop` 與 `/sandbox-openshell` 即可直接調用。turbovec 無獨立入口（DOC-ONLY，見其 RUN.md）。
 2. **cwd / 路徑很重要**：SKILL.md 的 `!`cmd`` 注入與 body 用 **repo-relative 路徑**（`sandboxes/<name>/src/...`）。
    調用時 **cwd 要在本 repo 根**，否則注入命令找不到檔；若把 SKILL.md copy 到別處，請同步改 `src/` 路徑。
 3. 接好後用 `/<name>` 或觸發詞調用，Claude 依該 SKILL.md body 驅動沙盒。
@@ -139,9 +144,12 @@ python3 sandboxes/turbovec/src/containment_rag_probe.py -n ns-sandbox
 - **完整 live 能力**：`self-correcting-loop` 純 python3 即為 live；`openshell-containment`（真實 enforced containment）
   需 OpenShell CLI + Docker；`turbovec`（air-gapped RAG）再加一次性 staged wheels。重型 probe 會寫
   `data/production/...`（northstar 佈局），首次跑可能要先 `mkdir -p`。
-- **不隨附的私有件**：`.claude/commands/<name>.md` 入口、共享 gate `fold_in_sandbox_gate.py`、治理詞彙
-  （`PG-xxx` / `DDR-031` / `Slop #n` / `engine-locus`）定義——文中對它們、以及對未發佈的 `solo-pipeline` /
-  `_integration` 的散文提及是 dangling reference（已知且接受，不是缺檔，別去補）。
+- **隨附但已清理的入口**：`.claude/commands/self-correcting-loop.md` + `sandbox-openshell.md`（claude code 載入/
+  驅動沙盒的真入口）已隨附，但鏡像時**抹去了指向私有治理層 / 內部安全 bridge 的路由**（見各檔 MIRROR NOTE）。
+  turbovec 無獨立入口（DOC-ONLY）。各沙盒實際運作見 `RUN.md`，框架見 `PRODUCTION-CONSUMPTION.md`。
+- **仍不隨附的私有件**：共享 gate `fold_in_sandbox_gate.py`、吸收源 method-problem-bridge（含 northstar 內部
+  安全架構 mirror）、治理詞彙（`PG-xxx` / `DDR-031` / `Slop #n` / `engine-locus`）定義——文中對它們、以及對
+  未發佈的 `solo-pipeline` / `_integration` 的散文提及是 dangling reference（已知且接受，不是缺檔，別去補）。
 - **Zero-API-Key**：常駐檢索 / 嵌入 / rerank 100% 本地化（Ollama），**無雲端 key**。
 
 ---
@@ -165,11 +173,14 @@ python3 sandboxes/turbovec/src/containment_rag_probe.py -n ns-sandbox
 ```
 adlc-sandboxes/
 ├── run-tests.sh          ← 一鍵 runnable proof（3 沙盒 test + selftest 全綠）
+├── PRODUCTION-CONSUMPTION.md ← 沙盒在 Claude Code 的生產消費關係（總覽）
+├── .claude/commands/     ← 清理版 /command 入口（self-correcting-loop · sandbox-openshell）
 ├── research/             ← 各沙盒吸收的源 DR 報告（raw Gemini DR export，非 vetted fact）
 └── sandboxes/
     ├── PANORAMA.md       ← 全景圖（沙盒 wiring 的 live SSOT；機器可解 yaml block）
     └── <name>/
         ├── SKILL.md          ← 沙盒接口契約 = Claude Code skill 定義（frontmatter name = /command 名）
+        ├── RUN.md            ← 實際運作過程與結果（生產消費循環 + 真實 live transcript）
         ├── causal-chain.md   ← 沙盒內技術落地脈絡（外部概念 → bridge → build → 對抗驗證 → 暴露）
         ├── absorption-form.md← 從此沙盒吸收了什麼「形式」
         ├── manifest.yaml     ← 機器可解的能力清單 + 啟動宣告

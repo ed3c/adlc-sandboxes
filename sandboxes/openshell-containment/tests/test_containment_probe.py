@@ -1,5 +1,5 @@
 """
-T1+T4 — containment_probe: the ADLC Test-phase evaluator for the OpenShell Runtime-containment layer.
+T1+T4 — containment_probe: the Test-phase evaluator for the OpenShell Runtime-containment layer.
 
 Two layers, matching the test pyramid:
   - T1 (pure classifier, no infra): the DISCRIMINATION proof / placebo-guard. The classifier is a pure
@@ -13,10 +13,9 @@ Two layers, matching the test pyramid:
 Related docs:
 - Evaluator: sandboxes/openshell-containment/src/containment_probe.py
 - Runner: sandboxes/openshell-containment/src/sandbox_runner.py
-- Bridge: .claude/skills/mega-flow-harness-hub/harness-component/decouple-zero-trust-dr/method-problem-bridge.yaml
 
-Migrated cc-20260611 (slice-03 of adlc-sandbox-architecture, F3): the OpenShell containment artifacts
-became the `openshell-containment/` sandbox src/. Tests resolve the sandbox-local src/, not execution/scripts/.
+The OpenShell containment artifacts live in this `openshell-containment/` sandbox src/.
+Tests resolve the sandbox-local src/.
 """
 import sys
 from pathlib import Path

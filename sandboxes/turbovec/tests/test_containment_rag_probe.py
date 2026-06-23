@@ -1,8 +1,7 @@
-"""Unit tests for containment_rag_probe classifiers — the discrimination vector, both ways (DDR-031).
+"""Unit tests for containment_rag_probe classifiers — the discrimination vector, both ways (deterministic).
 
 Related docs:
 - Capability: sandboxes/turbovec/src/containment_rag_probe.py
-- Plan: docs/plans/2026-06-18-turbovec-adlc/01-runtime-proof.md
 
 Pure-function tests (no live sandbox): a correct workload + denied egress → contained; a degraded workload
 or a SUCCEEDED egress → NOT contained. A placebo (no-op turbovec / permissive policy) cannot score 0.

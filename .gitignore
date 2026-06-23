@@ -15,3 +15,6 @@ sandboxes/*/state/*
 
 # generated trace outputs from running selftests (the committed *-fold-in-gate.record.json stay tracked)
 sandboxes/*/trace/*selftest*
+
+# runtime artifacts written by live probes (northstar data/production layout — not part of the mirror)
+data/

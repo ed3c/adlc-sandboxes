@@ -1,28 +1,25 @@
 #!/usr/bin/env bash
 # openshell_gateway_bootstrap.sh — re-runnable bootstrap for a LOCAL NVIDIA OpenShell gateway on macOS.
 #
-# WHY: northstar's ADLC "develop a sandbox" landed the real NVIDIA OpenShell as its Runtime-containment
-# layer (bridge decouple-zero-trust-dr; user LAND-DECISION 2026-06-10 "ADLC 就是開發沙盒"). Self-hosting
-# OpenShell's docker-driver on macOS Docker Desktop fights its Linux-first design: the gateway runs in a
-# container but creates SIBLING sandbox containers via the host Docker daemon, so EVERY path the gateway
-# asks the host to bind-mount into a sandbox (supervisor binary, mTLS certs, per-sandbox JWT token) must
-# be HOST-reachable at the SAME absolute path the gateway records. On Linux host-HOME == container-HOME
-# so this is automatic; on macOS it is NOT (host /Users/<u> vs container /root|/home/openshell). This
-# script codifies the keystone fix discovered cc-20260610 (9 friction layers, see ADLC module / bridge):
+# WHY: this sandbox runs agent-generated code under the real NVIDIA OpenShell as its Runtime-containment
+# layer. Self-hosting OpenShell's docker-driver on macOS Docker Desktop fights its Linux-first design: the
+# gateway runs in a container but creates SIBLING sandbox containers via the host Docker daemon, so EVERY
+# path the gateway asks the host to bind-mount into a sandbox (supervisor binary, mTLS certs, per-sandbox
+# JWT token) must be HOST-reachable at the SAME absolute path the gateway records. On Linux host-HOME ==
+# container-HOME so this is automatic; on macOS it is NOT (host /Users/<u> vs container /root|/home/openshell).
+# This script codifies the keystone fix (9 friction layers):
 #   set the gateway container's HOME to the host home + same-path mount everything HOME-relative.
 #
-# DESIGN: thin, idempotent glue over the `openshell` CLI + `docker` — NO new engine (Slop #2). northstar
-# does not depend on this at import time; it is invoked on demand (Build phase / containment_probe Test
-# phase / before promotion). Runtime LLM stays Zero-API-Key (sandboxes can run --from ollama; the gateway
-# pulls no model). The ONE external pull is the one-time `uv tool install openshell` + GHCR images.
+# DESIGN: thin, idempotent glue over the `openshell` CLI + `docker` — no new engine, composition over
+# building. Nothing depends on this at import time; it is invoked on demand (Build phase / containment_probe
+# Test phase / before promotion). Runtime LLM stays Zero-API-Key (sandboxes can run --from ollama; the
+# gateway pulls no model). The ONE external pull is the one-time `uv tool install openshell` + GHCR images.
 #
-# SECURITY (recorded, human-authorized 2026-06-10): the gateway container mounts /var/run/docker.sock
+# SECURITY (recorded, human-authorized): the gateway container mounts /var/run/docker.sock
 # (host-root-equivalent control of the Docker daemon) and runs plaintext mTLS bound to 127.0.0.1. This is
-# OpenShell's documented docker-driver requirement, not a northstar choice. Tear down when idle.
+# OpenShell's documented docker-driver requirement. Tear down when idle.
 #
 # Related docs:
-# - ADLC module: .claude/skills/mega-flow-harness-hub/modules/adlc-lifecycle.md (Runtime layer + 9-layer playbook)
-# - Bridge: .claude/skills/mega-flow-harness-hub/harness-component/decouple-zero-trust-dr/method-problem-bridge.yaml
 # - Source (stealth-located): docs.nvidia.com/openshell/about/container-gateway + github.com/NVIDIA/OpenShell
 #
 # Usage:

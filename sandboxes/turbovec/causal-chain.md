@@ -28,7 +28,7 @@ chain:
     runtime_evidence_ref: "sandboxes/turbovec/trace/2026-06-18-fold-in-gate.record.json"
     iso: "2026-06-18"
   - concept: "scaffold runtime 驗證 + land-plan 完成 record：18 PASS / 0 FAIL Session-LIVE + REQUIRED_LAND_PLAN_V2 九步 COMPLETE"
-    landed_artifact: ".claude/skills/scaffold-liveness-auditor/configs/2026-06-18-turbovec-adlc-scaffold-liveness.yaml"
+    landed_artifact: "<private — northstar skill layer, not mirrored>"
     wiring_ref: "docs/plans/2026-06-18-turbovec-adlc/03-ledgers-and-gates.md"
     wiring_anchor: "2026-06-18-turbovec-adlc-scaffold-liveness.yaml"
     runtime_evidence_ref: "data/production/flywheel-runs/2026-06-18T18:01:45Z-turbovec-adlc.flywheel-run.yaml"

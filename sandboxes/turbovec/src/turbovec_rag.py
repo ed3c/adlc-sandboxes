@@ -6,10 +6,10 @@ machine-parseable verdict line. Run inside the OpenShell sandbox by containment_
 returns recall_at1=1.0 while egress is default-denied, the source's "nothing leaves the machine" claim
 is a machine fact, not prose.
 
-Honest boundary (Slop #18): synthetic seeded vectors — NOT Ollama embeddings. A real embedded corpus is
-declined-pool for v1 (keeps this gate deterministic + offline). See absorption-form.md.
+Honest boundary: synthetic seeded vectors — NOT Ollama embeddings. A real embedded corpus is out of
+scope for v1 (keeps this gate deterministic + offline).
 
-Determinism (DDR-031): fixed seed, fixed shapes, zero clock reads → identical output every run.
+Deterministic (no LLM-judge): fixed seed, fixed shapes, zero clock reads → identical output every run.
 """
 from __future__ import annotations
 

@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """loop_kernel — deterministic DECIDE gate for a PLAN/DO/VERIFY/DECIDE self-correcting loop.
 
-WHY (the demand, cc-20260623 human-admitted, supply-push-landed-in-sandbox): a self-correcting
-refinement loop ("iterate until every rubric criterion >= threshold") is only as honest as its
-DECIDE step. If an LLM both produces the artifact AND judges "all criteria are 8/10, so FINAL",
-the loop can self-deceive (PG-102 hallucination propagation; PG-009 structure-passes-behavior-fails).
-This kernel MECHANIZES the DECIDE step into a determinate function (DDR-031, zero LLM scoring):
-FINAL is entailed by actual scores >= thresholds, never by an agent's prose claim. The LLM still
-owns PLAN (what to fix), DO (produce/improve), and VERIFY (assign each criterion a score); the
-kernel owns only DECIDE + convergence tracking + the bounded-iteration SURFACE guard.
+WHY: a self-correcting refinement loop ("iterate until every rubric criterion >= threshold") is
+only as honest as its DECIDE step. If an LLM both produces the artifact AND judges "all criteria
+are 8/10, so FINAL", the loop can self-deceive (hallucination propagation; structure passes but
+behavior fails). This kernel MECHANIZES the DECIDE step into a determinate function (deterministic,
+zero LLM scoring): FINAL is entailed by actual scores >= thresholds, never by an agent's prose
+claim. The LLM still owns PLAN (what to fix), DO (produce/improve), and VERIFY (assign each
+criterion a score); the kernel owns only DECIDE + convergence tracking + the bounded-iteration
+SURFACE guard.
 
-This COMPOSES the existing loop layer (Slop #2 / PG-103 — no new engine): autoresearch is the
+This COMPOSES the existing loop layer rather than building a new engine: autoresearch is the
 code-metric iteration instance, /refactor-loop the refactor instance; this is the generic
 artifact-to-rubric instance whose one novel part is the deterministic DECIDE gate.
 
 DETERMINISM: pure functions; no datetime.now()/random — the only timestamp source is an explicit
-`iso` argument (parity with fold_in_sandbox_gate / promotion_redset_attribution). Tie-breaking is
-fully ordered (lowest score, then rubric declared order), so decide() is a pure function of inputs.
+`iso` argument. Tie-breaking is fully ordered (lowest score, then rubric declared order), so
+decide() is a pure function of inputs.
 
 EXIT SEMANTICS (CLI):
   selftest : 0 = kernel behaves correctly against bundled fixtures · 1 = a self-check failed
@@ -25,7 +25,6 @@ EXIT SEMANTICS (CLI):
 
 Related docs:
 - Interface contract: sandboxes/self-correcting-loop/SKILL.md (C1-C5) + manifest.yaml
-- Loop governance + DCI 5-rule contract: .claude/skills/adlc/skill.md S1/S3
 - Convention: sandboxes/README.md + sandboxes/_TEMPLATE/
 """
 from __future__ import annotations
@@ -46,7 +45,7 @@ _FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 class RubricError(Exception):
-    """Fail-loud input defect (malformed rubric / scorecard). Never silently coerced (PG-151)."""
+    """Fail-loud input defect (malformed rubric / scorecard). Never silently coerced."""
 
 
 @dataclass(frozen=True)
@@ -181,7 +180,7 @@ def _atomic_write_json(path: Path, payload: dict) -> None:
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def _render_state_snapshot(state: dict) -> str:
-    """Bounded (<=~12 lines) loop-state snapshot for DCI injection (adlc DCI rule 2: bounded output)."""
+    """Bounded (<=~12 lines) loop-state snapshot for DCI injection (bounded output)."""
     iters = state.get("iterations", [])
     lines = [f"loop iterations: {len(iters)}/{state.get('max_iterations', DEFAULT_MAX_ITERATIONS)}"]
     if iters:
@@ -264,7 +263,7 @@ def _default_state_dir() -> Path:
 
 def _main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog="loop_kernel",
-                                 description="deterministic DECIDE gate for a self-correcting loop (DDR-031)")
+                                 description="deterministic DECIDE gate for a self-correcting loop (deterministic)")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p_self = sub.add_parser("selftest", help="run bundled fixtures, assert kernel correctness (runtime_trace_cmd)")

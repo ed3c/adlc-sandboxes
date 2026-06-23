@@ -1,7 +1,7 @@
-# sandboxes/self-correcting-loop/tests/qa.golden.yaml — fold_in_sandbox_gate qa tier fixture.
+# sandboxes/self-correcting-loop/tests/qa.golden.yaml — the validation gate's qa tier fixture.
 # BOW-cosine (deterministic, no Ollama) scores each query against THIS sandbox's SKILL.md routing
 # surface; actual = trigger if cosine > min_score else no_trigger. regression green iff every
-# actual == expected_current (PG-214 behavioral-golden). expected_current = MEASURED baseline (filled
+# actual == expected_current (behavioral-golden). expected_current = MEASURED baseline (filled
 # after a real qa run, never predicted).
 schema: sandbox-qa-golden/v1
 min_score: 0.05
