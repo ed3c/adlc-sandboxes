@@ -103,7 +103,7 @@ $ python3 sandboxes/self-correcting-loop/src/loop_kernel.py selftest --iso 2026-
 $ python3 -m pytest -q sandboxes/self-correcting-loop/tests/
 ......................... 25 passed in 0.15s          # exit 0
 ```
-`trace/2026-06-23-fold-in-gate.record.json` → `verdict: LIVE`：static C1–C6 ✅ + qa 5/5 ✅ +
+`trace/2026-06-23-fold-in-gate.record.json` → `verdict: LIVE`：static 接口檢查 ✅ + qa 5/5 ✅ +
 runtime selftest exit 0 ✅ + composition N/A。runtime-proven。
 
 ## 3. 誠實邊界

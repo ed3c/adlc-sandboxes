@@ -10,7 +10,7 @@
   ],
   "static": {
     "ok": true,
-    "detail": "C1-C5 + qa_fixture + runtime_trace_cmd all present",
+    "detail": "interface + qa_fixture + runtime_trace_cmd all present",
     "checks": [
       {
         "id": "C1",
@@ -25,7 +25,7 @@
       {
         "id": "C3",
         "ok": true,
-        "msg": "causal-chain.md non-placeholder=True, absorption-form.md non-placeholder=True"
+        "msg": "interface contract docs present and non-placeholder"
       },
       {
         "id": "C5",

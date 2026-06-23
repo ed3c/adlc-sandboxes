@@ -1,22 +1,16 @@
 ---
 name: sandbox-openshell
-description: "啟動並消費 OpenShell Runtime-containment ADLC 沙盒（launch contract + Dynamic Context Injection 實時狀態快照）。Use when: 啟動沙盒 / containment 驗證 / 在沙盒裡執行 untrusted・agent-generated code。NOT for: 建新沙盒、改沙盒策略、auto-iterate（engine-locus 紅線）。"
+description: "啟動並消費 OpenShell Runtime-containment 沙盒（launch contract + Dynamic Context Injection 實時狀態快照）。Use when: 啟動沙盒 / containment 驗證 / 在沙盒裡執行 untrusted・agent-generated code。NOT for: 建新沙盒、改沙盒策略、auto-iterate（無自動迭代）。"
 argument-hint: "[--sandbox <name>=ns-sandbox] [--probe --iso <ISO>] [--exec \"<cmd>\"]"
 allowed-tools: Bash(timeout 12 bash sandboxes/openshell-containment/src/openshell_gateway_bootstrap.sh status:*), Bash(timeout 5 sed:*), Bash(timeout 10 docker logs --tail 8 openshell-gateway:*), Bash(bash sandboxes/openshell-containment/src/openshell_gateway_bootstrap.sh up:*), Bash(bash sandboxes/openshell-containment/src/openshell_gateway_bootstrap.sh status:*), Bash(python3 sandboxes/openshell-containment/src/sandbox_runner.py:*), Bash(python3 sandboxes/openshell-containment/src/containment_probe.py:*), Bash(echo:*)
 activation_injection: true
 ---
 
-<!-- ════════════════════════════════════════════════════════════════════════
- MIRROR NOTE — 此檔從私有 northstar 的 `.claude/commands/sandbox-openshell.md` 鏡像而來，是 claude code
- **載入/驅動 openshell-containment 沙盒的真實 `/command` 入口**（生產消費關係的消費端）。為公開展示，
- 鏡像時做了三處清理：① 描述段原指「能力本體住 execution/scripts/」（northstar 私有佈局）→ 校正為本 repo
- 的 `sandboxes/openshell-containment/src/`；② 路由段對私有 mega-flow-harness-hub / adlc plans 的指向 → 標
- withheld；③ **移除**對吸收源 bridge（含 northstar 內部安全架構 mirror，刻意不公開）的路由引用。
- 注意命名：本入口名 = `/sandbox-openshell`（manifest 寫的 `/openshell-containment` 是 DOC-ONLY 別名）。
- 實際運作過程與真實 live 輸出（gateway Connected / containment_probe 3-case 0-failure）見沙盒的 RUN.md。
- ════════════════════════════════════════════════════════════════════════ -->
-
 # /sandbox-openshell — OpenShell Runtime-containment 沙盒接口（launch + consume，永不 build）
+
+> 這是 Claude Code **載入 / 驅動 openshell-containment 沙盒的真實 `/command` 入口**（生產消費關係的消費端）。
+> 命名：本入口名 = `/sandbox-openshell`（manifest 寫的 `/openshell-containment` 是 DOC-ONLY 別名）。
+> 實際運作過程與真實 live 輸出（gateway Connected / containment_probe 3-case 0-failure）見沙盒的 `RUN.md`。
 
 ## 描述
 per-sandbox 沙盒接口：讓使用者直接觸發已落地的 OpenShell Runtime-containment 能力。本 command =
@@ -42,7 +36,7 @@ containment_probe.py），本檔指向不複述。
   `disableSkillShellExecution` 全域停用；請 (a) 從 settings 移除該 key 後重跑 /sandbox-openshell，
   或 (b) 手動執行下方 launch contract 各命令」。**永不**在無實時狀態下靜默續行（過時猜測 = 本接口
   存在的反命題）。
-- **紅線 engine-locus**：本 command 只**啟動 + 注入狀態 + 消費**已落地的沙盒能力。
+- **邊界**：本 command 只**啟動 + 注入狀態 + 消費**已落地的沙盒能力。
   **永不** auto-build / auto-iterate / 修改沙盒策略 / 自動重試迴圈。containment_probe 任何
   `failure: true` case = SURFACED gap **交人**（report-only，containment_probe.py 同契約），
   不在本 command 內修。
@@ -83,6 +77,4 @@ containment_probe.py），本檔指向不複述。
 ## 路由
 - 沙盒本體 = `sandboxes/openshell-containment/`（src + tests + trace）；接口契約 = 同沙盒 `SKILL.md`；
   wiring 真相 = [`../../sandboxes/PANORAMA.md`](../../sandboxes/PANORAMA.md) `openshell-containment` block（LIVE）。
-- 落地脈絡（外部 DR → bridge → build → 對抗驗證）= 同沙盒 `causal-chain.md`；吸收形式 = `absorption-form.md`。
-- 沙盒 registry facet、adlc 三-tier 測試規範、吸收源 method-problem-bridge（含 northstar 內部安全架構 mirror）
-  = northstar 私有治理層，**刻意未隨附本鏡像**。
+- 落地脈絡（外部 DR → build → 對抗驗證 → 暴露）見同沙盒 `RUN.md`；吸收源 DR 見 [`../../research/`](../../research/)。

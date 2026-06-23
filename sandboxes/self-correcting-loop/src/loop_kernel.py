@@ -24,8 +24,7 @@ EXIT SEMANTICS (CLI):
   state    : 0 = printed a bounded loop-state snapshot · 1 = no such loop / unreadable
 
 Related docs:
-- Interface contract: sandboxes/self-correcting-loop/SKILL.md (C1-C5) + manifest.yaml
-- Convention: sandboxes/README.md + sandboxes/_TEMPLATE/
+- Interface contract: sandboxes/self-correcting-loop/SKILL.md + manifest.yaml
 """
 from __future__ import annotations
 

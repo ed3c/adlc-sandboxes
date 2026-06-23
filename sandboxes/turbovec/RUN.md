@@ -1,26 +1,26 @@
 # RUN — turbovec 的實際運作過程與結果
 
-> 本檔 = 這個沙盒的**消費關係** + 一次**真實 live 運作**的 transcript。下方
+> 本檔 = 這個沙盒在 Claude Code 的**生產消費關係** + 一次**真實 live 運作**的 transcript。下方
 > containment_rag_probe 採自本機**真跑**（turbovec 已 staged 進 `ns-sandbox`，`recall_at1=1.0`），非 mock。
 
-## 1. 消費關係
+## 1. 在 Claude Code 的生產消費關係
 
-turbovec **compose `openshell-containment`**——它沒有自己獨立的 `/command` 入口檔，
-消費路徑**嫁接**在 openshell 的 `ns-sandbox` 之上：
+turbovec 有自己的 `/command` 入口（[`.claude/commands/turbovec.md`](../../.claude/commands/turbovec.md)），
+且 **compose `openshell-containment`**——它的 runtime 住在 openshell 的 `ns-sandbox`（default-deny egress）內：
 
-- **無獨立 command 入口**：SKILL.md frontmatter 宣告 `/turbovec` 並含 `!`cmd`` 注入契約，但本 repo
-  **沒有** `commands/turbovec.md`（DOC-ONLY，誠實標記）。故 `/turbovec` 不會被動
-  載入。它的真實消費路徑有二：(a) 經 `/sandbox-openshell` 的 `--exec` 在 `ns-sandbox` 內跑 turbovec；
-  (b) 直接跑 host-side orchestrator `containment_rag_probe.py`
+- **`/command` 入口**：SKILL.md frontmatter 宣告 `/turbovec` + C2 `!`cmd`` 注入契約，且本 repo 隨附
+  `.claude/commands/turbovec.md`（launch contract：① openshell gateway 前置 → ② turbovec staged 確認 →
+  ③ 消費 `containment_rag_probe`）。也可直接跑 host-side orchestrator `containment_rag_probe.py`
   （它內部用 `openshell sandbox exec` 進 sandbox）。
 - **compose 而非新引擎**：turbovec 的 runtime **住在 openshell-containment 的 sandbox 裡**——所以「air-gapped」
-  不是 turbovec 自稱，是 openshell 的 default-deny egress 邊界**替它**保證的。
+  不是 turbovec 自稱，是 openshell 的 default-deny egress 邊界**替它**保證的。入口因此先確認 openshell
+  前置（compose 依賴），再消費 turbovec。
 
 ```
    人決定何時調用
         │
         ▼
-  （無獨立 /command；經 /sandbox-openshell --exec 嫁接 或 直接 containment_rag_probe.py）
+  /turbovec（.claude/commands/turbovec.md；compose openshell：先確認 gateway/staged，再消費 probe）
         │
    ①生產 runtime 狀態 ── SKILL.md !`cmd`：trace tail + ns-sandbox 內 `import turbovec` 探測
         │
@@ -75,7 +75,7 @@ $ python3 sandboxes/turbovec/src/containment_rag_probe.py -n ns-sandbox
 $ python3 -m pytest -q sandboxes/turbovec/tests/
 ..... 5 passed in 0.11s          # exit 0（mock 沙盒邊界，無 infra 也綠）
 ```
-`trace/2026-06-18-fold-in-gate.record.json` → `verdict: LIVE`：static C1–C5 ✅ + qa 3/3 ✅ +
+`trace/2026-06-18-fold-in-gate.record.json` → `verdict: LIVE`：static 接口檢查 ✅ + qa 3/3 ✅ +
 runtime containment_rag_probe exit 0 ✅。runtime-proven。
 
 ## 3. 誠實邊界
@@ -84,7 +84,8 @@ runtime containment_rag_probe exit 0 ✅。runtime-proven。
   **full live 較重**：需 (1) openshell-containment gateway 就緒 + (2) 一次性
   `bash src/stage_turbovec_wheels.sh`（host-side、已授權的 **offline abi3 wheel** 注入沙盒）。缺任一 → probe
   precondition fail-loud。無 infra 時 `pytest` 仍綠（mock）。
-- **`/turbovec` 是 DOC-ONLY**：沒有 `commands/turbovec.md`，不會被動載入。消費走 `/sandbox-openshell`
-  嫁接或直接 probe（見上）。本沙盒**不為它偽造 command 入口**（honest boundary）。
+- **`/turbovec` 入口 compose openshell**：入口在 `.claude/commands/turbovec.md`，但 turbovec 的 runtime 住在
+  openshell-containment 的 `ns-sandbox` 內，故 full live 必須 openshell gateway 先就緒 + turbovec staged
+  ——入口的 launch contract 會先確認這兩個前置，缺則先拉起 / stage。
 - **air-gapped 由 compose 保證**：egress-deny 是 openshell-containment 的邊界；turbovec 只負責「在裡面能正確
   檢索」。兩條件 AND 成立才 `count_metric==0`——任一破即非 air-gapped。

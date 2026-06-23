@@ -2,26 +2,26 @@
 
 # adlc-sandboxes
 
-**Three RIP-proven ADLC sandboxes — each an external idea *landed* as a self-contained, runnable mini-project — mirrored from a private demand-pull capability system (codename _northstar_).**
+**Three small, self-contained sandboxes — each turns one external idea into a runnable, deterministically-verified capability you can invoke as a Claude Code `/command`.**
 
 ![sandboxes](https://img.shields.io/badge/sandboxes-3-blue)
 ![tests](https://img.shields.io/badge/tests-38_passing-brightgreen)
 ![runtime](https://img.shields.io/badge/runtime-python3-blue)
 ![API keys](https://img.shields.io/badge/API_keys-zero-success)
-![status](https://img.shields.io/badge/status-raw__mirror_showcase-lightgrey)
+![status](https://img.shields.io/badge/status-showcase-lightgrey)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 <br>
 
-*Not a product to install — a showcase to read, run, and learn from.*
 *Each `SKILL.md` is a real Claude Code `/command` definition. Each sandbox ships green tests.*
+*"Done / contained / air-gapped" is a machine fact — an exit code, a count, a real score — never an LLM's claim.*
 
-> **Showcase, not a product.** The orchestration / gate / governance layer that *runs* these in
-> `northstar` is private and **not** in this repo — so the **live** capability of two sandboxes needs
-> extra infra. But every sandbox has a one-command green test entry (`bash run-tests.sh`). See
-> [Honest boundary](#honest-boundary).
+> **Design intent.** Each sandbox isolates ONE capability behind a deterministic gate, exposed as a
+> `/command` whose entry injects the sandbox's live runtime state at call time. Every sandbox ships a
+> one-command green test entry (`bash run-tests.sh`); two need extra infra for their full live
+> capability. See [Honest boundary](#honest-boundary).
 
-[What](#what-this-is) · [Sandboxes](#sandboxes) · [Quick verify](#quick-verify) · [Usage](#usage) · [Sources](#absorbed-sources-dr) · [Invariants](#design-invariants)
+[What](#what-this-is) · [Sandboxes](#sandboxes) · [Quick verify](#quick-verify) · [Usage](#usage) · [Sources](#absorbed-sources-dr)
 
 </div>
 
@@ -44,13 +44,21 @@
 
 ## What this is
 
-**北極星本質**：northstar = 一套私有的 *demand-pull 能力獲取系統*——把一個外部想法變成 LLM 在 repo 內 runtime
-行為的真實改變，且不把「讀過了 / 長得像」當「長了能力」。其 FORM = 「迴圈工程 ADLC 開發沙盒」。
+**設計意圖**：每個沙盒 = 把**一個外部想法**落地成一個**自洽的小 project**，遵循同一套設計原則：
 
-- **本 repo** = 從 northstar 抽出的 `sandboxes/` 部分（只取完成度高的 3 個），**原樣鏡像（raw mirror）**。
-- **只收完成度高的沙盒**：私有 northstar 另有 scope 仍 narrowed 的 `solo-pipeline` 與 `_integration` 整合單元，
-  依完成度門檻**未**納入。
-- 私有治理層（CLAUDE.md 全文、problem-graph、skills 註冊、`execution/` 腳本、gate 機制）**不在此 repo**。
+- **一個能力、一個沙盒**：各沙盒只隔離一件事——enforced containment 執行 / air-gapped 本地向量檢索 /
+  自我修正迴圈的確定性 DECIDE 閘。
+- **確定性閘優於 LLM-judge**：「達標 / contained / air-gapped」由確定性 kernel 裁——exit code、
+  `count_metric`、真實分數——**不是 agent 的散文宣稱**。
+- **`/command` 接口 + 即時狀態注入**：能力以 Claude Code `/command` 暴露，入口在調用瞬間用 `!`cmd``
+  dynamic context injection 把沙盒**當前 runtime 狀態**注入 context，讓模型基於真實狀態而非過時猜測行動。
+- **compose 既有層、不造新引擎**：每個沙盒只新增最小的那一塊（如 `self-correcting-loop` 只新增 DECIDE 閘，
+  PLAN/DO/VERIFY 復用既有 loop 層）。
+- **人決定 WHAT、人接受結果**：target / rubric / 何時調用 / 是否接受由人定；沙盒只跑確定性那一步——
+  **沒有自動接受結果、自動續跑的循環**。
+
+每個沙盒的真實運作（生產消費循環 + live transcript）見各 [`RUN.md`](sandboxes/)；通用框架見
+[`PRODUCTION-CONSUMPTION.md`](PRODUCTION-CONSUMPTION.md)。
 
 ---
 
@@ -64,7 +72,7 @@
 | `turbovec` | air-gapped 本地向量檢索——index+self-query 全在 containment 內（count_metric==0 = 不出機器；composes openshell-containment） | `/turbovec` | ✅ 5 passed | 上者 + staged wheels |
 | `self-correcting-loop` | PLAN/DO/VERIFY/DECIDE 的確定性 DECIDE 閘——∀criterion ≥ threshold → FINAL，否則 ITERATING + 最弱項；有界 no-progress / exhaustion 守衛；零 LLM-judge | `/self-correcting-loop` | ✅ 25 passed + selftest 6/6 | 無（live 也只需 python3） |
 
-全景圖（機械可驗的 wiring SSOT）：[`sandboxes/PANORAMA.md`](sandboxes/PANORAMA.md)。
+全景圖（機械可驗的 wiring 真相）：[`sandboxes/PANORAMA.md`](sandboxes/PANORAMA.md)。
 
 ---
 
@@ -94,19 +102,20 @@ bash run-tests.sh
 
 ### A — 當成 Claude Code skill / `/command` 用
 
-1. **讓 Claude Code 發現它**——把沙盒接成一個 skill：
-   ```bash
-   mkdir -p ~/.claude/skills/self-correcting-loop
-   ln -s "$PWD/sandboxes/self-correcting-loop/SKILL.md" ~/.claude/skills/self-correcting-loop/SKILL.md
-   ```
-   （或放 project-local 的 `.claude/skills/<name>/SKILL.md`，或在 `settings.json` 把 `sandboxes/` 註冊為 skill 來源。）
-   > northstar 用 `.claude/commands/<name>.md` 入口控制被動上下文載入；**本 repo 已隨附清理版入口**
-   > （[`.claude/commands/`](.claude/commands/)：`self-correcting-loop.md` + `sandbox-openshell.md`，鏡像時已抹去
-   > 指向私有治理層 / 內部安全 bridge 的路由，見各檔 MIRROR NOTE）。clone 後把本 repo 當 project 開（cwd 在 repo
-   > 根），`/self-correcting-loop` 與 `/sandbox-openshell` 即可直接調用。turbovec 無獨立入口（DOC-ONLY，見其 RUN.md）。
-2. **cwd / 路徑很重要**：SKILL.md 的 `!`cmd`` 注入與 body 用 **repo-relative 路徑**（`sandboxes/<name>/src/...`）。
-   調用時 **cwd 要在本 repo 根**，否則注入命令找不到檔；若把 SKILL.md copy 到別處，請同步改 `src/` 路徑。
-3. 接好後用 `/<name>` 或觸發詞調用，Claude 依該 SKILL.md body 驅動沙盒。
+本 repo **隨附三個 `/command` 入口**（[`.claude/commands/`](.claude/commands/)：`self-correcting-loop.md` ·
+`sandbox-openshell.md` · `turbovec.md`）。clone 後把本 repo 當 project 開（**cwd 在 repo 根**），
+`/self-correcting-loop`、`/sandbox-openshell`、`/turbovec` 即可直接調用（`/turbovec` compose openshell-containment，
+入口的 launch contract 會先確認 openshell gateway + turbovec staged 兩個前置）。
+
+也可把單一沙盒接成你自己的 skill：
+
+```bash
+mkdir -p ~/.claude/skills/self-correcting-loop
+ln -s "$PWD/sandboxes/self-correcting-loop/SKILL.md" ~/.claude/skills/self-correcting-loop/SKILL.md
+```
+
+> **cwd / 路徑很重要**：SKILL.md 與入口的 `!`cmd`` 注入用 **repo-relative 路徑**（`sandboxes/<name>/src/...`）。
+> 調用時 cwd 要在 repo 根；若把 SKILL.md copy 到別處，請同步改 `src/` 路徑。
 
 ### B — 直接跑底層能力（不需 Claude Code）
 
@@ -143,13 +152,10 @@ python3 sandboxes/turbovec/src/containment_rag_probe.py -n ns-sandbox
   openshell-containment 8 · turbovec 5 · self-correcting-loop 25 passed + selftest 6/6。測試把外部邊界 mock 掉。
 - **完整 live 能力**：`self-correcting-loop` 純 python3 即為 live；`openshell-containment`（真實 enforced containment）
   需 OpenShell CLI + Docker；`turbovec`（air-gapped RAG）再加一次性 staged wheels。重型 probe 會寫
-  `data/production/...`（northstar 佈局），首次跑可能要先 `mkdir -p`。
-- **隨附但已清理的入口**：`.claude/commands/self-correcting-loop.md` + `sandbox-openshell.md`（claude code 載入/
-  驅動沙盒的真入口）已隨附，但鏡像時**抹去了指向私有治理層 / 內部安全 bridge 的路由**（見各檔 MIRROR NOTE）。
-  turbovec 無獨立入口（DOC-ONLY）。各沙盒實際運作見 `RUN.md`，框架見 `PRODUCTION-CONSUMPTION.md`。
-- **仍不隨附的私有件**：共享 gate `fold_in_sandbox_gate.py`、吸收源 method-problem-bridge（含 northstar 內部
-  安全架構 mirror）、治理詞彙（`PG-xxx` / `DDR-031` / `Slop #n` / `engine-locus`）定義——文中對它們、以及對
-  未發佈的 `solo-pipeline` / `_integration` 的散文提及是 dangling reference（已知且接受，不是缺檔，別去補）。
+  `data/...`，首次跑可能要先 `mkdir -p` 該輸出目錄。
+- **入口**：隨附 `.claude/commands/` 三個入口（`self-correcting-loop.md` · `sandbox-openshell.md` · `turbovec.md`）
+  是 Claude Code 載入 / 驅動沙盒的真入口（`/turbovec` compose openshell-containment）。各沙盒實際運作見 `RUN.md`，
+  框架見 `PRODUCTION-CONSUMPTION.md`。
 - **Zero-API-Key**：常駐檢索 / 嵌入 / rerank 100% 本地化（Ollama），**無雲端 key**。
 
 ---
@@ -162,50 +168,33 @@ python3 sandboxes/turbovec/src/containment_rag_probe.py -n ns-sandbox
 - `turbovec` ← 「embedded 向量資料庫 / turbovec / TurboQuant RAG 重構」DR
 - `self-correcting-loop` ← 無 DR（源自使用者 prompt 協定）
 
-> ⚠ DR 是**原始綜述、非 vetted fact**——吸收時的 external-verify 抓出多處 overstated/未查證宣稱
-> （詳 [`research/README.md`](research/README.md)）。逐條查證的**裁決帳本（bridge）刻意未公開**（含 northstar
-> 內部安全架構）；ZK/KG ingestion 產物亦不公開。
+> ⚠ DR 是**原始綜述、非 vetted fact**——吸收時的 external-verify 抓出多處 overstated / 未查證宣稱
+> （詳 [`research/README.md`](research/README.md)）。把這兩份 DR 當**原始吸收輸入**讀，不是已查證事實。
 
 ---
 
-## Layout & interface contract
+## Layout
 
 ```
 adlc-sandboxes/
-├── run-tests.sh          ← 一鍵 runnable proof（3 沙盒 test + selftest 全綠）
+├── run-tests.sh              ← 一鍵 runnable proof（3 沙盒 test + selftest 全綠）
 ├── PRODUCTION-CONSUMPTION.md ← 沙盒在 Claude Code 的生產消費關係（總覽）
-├── .claude/commands/     ← 清理版 /command 入口（self-correcting-loop · sandbox-openshell）
-├── research/             ← 各沙盒吸收的源 DR 報告（raw Gemini DR export，非 vetted fact）
+├── .claude/commands/         ← /command 入口（self-correcting-loop · sandbox-openshell）
+├── research/                 ← 各沙盒吸收的源 DR 報告（raw Gemini DR export，非 vetted fact）
 └── sandboxes/
-    ├── PANORAMA.md       ← 全景圖（沙盒 wiring 的 live SSOT；機器可解 yaml block）
+    ├── PANORAMA.md           ← 全景圖（沙盒 wiring 的 live 真相；機器可解 yaml block）
     └── <name>/
         ├── SKILL.md          ← 沙盒接口契約 = Claude Code skill 定義（frontmatter name = /command 名）
         ├── RUN.md            ← 實際運作過程與結果（生產消費循環 + 真實 live transcript）
-        ├── causal-chain.md   ← 沙盒內技術落地脈絡（外部概念 → bridge → build → 對抗驗證 → 暴露）
-        ├── absorption-form.md← 從此沙盒吸收了什麼「形式」
         ├── manifest.yaml     ← 機器可解的能力清單 + 啟動宣告
         └── src/  tests/  trace/
 ```
 
-接口契約摘要（每個 `SKILL.md` 必滿足）：
+每個 `SKILL.md` 提供：
 
-- **C1 frontmatter**：`name`（= `/command` 名）/ `description`（含觸發詞）/ `allowed-tools`。
-- **C2 ≥1 個 `!`cmd`` 注入**：body 至少一處用 dynamic context injection 把沙盒**當前 runtime 狀態**注入 context（RIP 的接口級實現）。
-- **C3 雙因果鏈**：`causal-chain.md`（沙盒內）＋ `absorption-form.md`（吸收形式），兩份分開。
-- **C4 全景圖註冊**：在 `PANORAMA.md` 有一 row + 一機器層 yaml block（存在 ≠ 接線，PG-157）。
-- **C5 啟動方式分別定義**：frontmatter + manifest 分別宣告 `/command` + 觸發詞 + 啟動前置。
-
----
-
-## Design invariants
-
-**設計紅線（這套東西的核心約束）：**
-
-- **engine-locus**：自轉只到 SURFACE / VERIFY；**WHAT 由人 admit、DECISION 結果由人接受**，沒有「自動接受結果的飛輪」。
-- **確定性閘優於 LLM-judge**：FINAL / contained / air-gapped 這些判定都由確定性 kernel（real scores / exit code /
-  count_metric）裁，不是 agent 的散文宣稱。
-- **compose 既有層、不造新引擎**：每個沙盒只新增最小的那一塊（如 self-correcting-loop 只新增 DECIDE 閘，
-  PLAN/DO/VERIFY 復用既有 loop 層）。
+- **frontmatter**：`name`（= `/command` 名）/ `description`（含觸發詞）/ `allowed-tools`。
+- **≥1 個 `!`cmd`` 即時狀態注入**：body 至少一處用 dynamic context injection 把沙盒**當前 runtime 狀態**注入 context。
+- **`PANORAMA.md` 登記**：一筆 row + 一個機器層 yaml block（存在 ≠ 接線）。
 
 ---
 
@@ -217,6 +206,6 @@ MIT — see [`LICENSE`](LICENSE). 涵蓋本 repo 的沙盒代碼與文檔；`res
 
 <div align="center">
 
-*出處：抽取自私有 northstar，僅作技術展示用途。內容語言以中文為主、hero 雙語。*
+*內容語言以中文為主、hero 雙語。*
 
 </div>

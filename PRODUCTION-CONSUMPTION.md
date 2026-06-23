@@ -7,7 +7,7 @@
 > |------|-------------|----------------|
 > | self-correcting-loop | [RUN.md](sandboxes/self-correcting-loop/RUN.md) | [.claude/commands/self-correcting-loop.md](.claude/commands/self-correcting-loop.md) |
 > | openshell-containment | [RUN.md](sandboxes/openshell-containment/RUN.md) | [.claude/commands/sandbox-openshell.md](.claude/commands/sandbox-openshell.md) |
-> | turbovec | [RUN.md](sandboxes/turbovec/RUN.md) | ⚠ 無獨立入口（DOC-ONLY `/turbovec`，經 `/sandbox-openshell` 嫁接） |
+> | turbovec | [RUN.md](sandboxes/turbovec/RUN.md) | [.claude/commands/turbovec.md](.claude/commands/turbovec.md)（compose openshell-containment） |
 
 ## 通用框架 — 一條雙向 producer↔consumer 鏈
 
@@ -15,7 +15,7 @@
 `/command` 入口檔（`.claude/commands/<name>.md`）裡的 **`!`cmd`` dynamic context injection**：
 
 ```
-   人 admit WHAT（target / rubric / 何時調用）
+   人決定 WHAT（target / rubric / 何時調用）
         │
         ▼
   /command 入口  ──①沙盒生產「runtime 狀態」──►  Claude 消費注入（基於真實狀態，非過時猜測）
@@ -34,7 +34,7 @@
 
 1. **① 沙盒生產 runtime 狀態 → Claude 消費**
    調用 `/command` 的瞬間，入口 body 的 `!`cmd`` 被執行，把沙盒**當前真實 runtime 狀態**的 stdout 注入
-   Claude 的 context。這是 RIP（被調用才活）的接口級實現——沙盒把「我現在是什麼狀態」生產出來餵給 Claude。
+   Claude 的 context。這是「被調用才執行」的接口級實現——沙盒把「我現在是什麼狀態」生產出來餵給 Claude。
 2. **② Claude（+人）生產驅動/判斷 → 沙盒消費**
    Claude 消費注入的狀態，依入口 body 的執行步驟驅動沙盒的 `src/` 能力（評分、launch、在沙盒內 exec 代碼）。
 3. **③ 沙盒的確定性 kernel 生產裁決 → Claude 消費**
@@ -42,14 +42,14 @@
    count_metric、exit code）——不是 LLM 的散文宣稱。
 4. **④ Claude 消費裁決決定下一步** → 達標交付；未達標下一輪 or `no_progress`/`exhausted`/`failure` → SURFACE 交人。
 
-### 紅線（engine-locus）— 生產的「分工」就是這套系統的核心約束
+### 設計分工 — 生產的「分工」就是這套系統的核心約束
 
 | 由**人 / Claude（LLM）**生產 | 由**沙盒 kernel**生產 |
 |------------------------------|----------------------|
 | WHAT：target、rubric、何時調用、是否接受結果 | 確定性 DECIDE/VERIFY：FINAL、`count_metric`、exit code |
 | ② 的判斷：評分（VERIFY）、寫待執行碼 | ① 的真實 runtime 狀態快照 |
 
-**沒有「沙盒自動接受結果、自動續跑」的飛輪。** 自轉只到 SURFACE/VERIFY；DECISION 結果由人接受。
+**沒有「沙盒自動接受結果、自動續跑」的循環。** 達標與否由確定性 kernel 裁；是否接受由人。
 這就是為什麼三個沙盒的「達標」判定（FINAL / fully-contained / air-gapped）全部由**確定性 kernel**
 （real scores / exit code / `count_metric`）裁，而不是 agent 說「我覺得可以了」。
 
@@ -62,7 +62,7 @@
 | **③ 裁決度量** | `FINAL`(exit0) / `ITERATING`(exit3)+focus | `count_metric`（0 = 3-case 全 contained） | `count_metric`（0 = recall 對 ∧ egress 拒） |
 | **④ 真實 live 結果** | selftest 6/6；decide `FINAL`✓ / `ITERATING` focus=readability | `cases=3 failures=0`；egress→curl56/403、`/Users` 不可見 | `count_metric=0`；`recall_at1=1.0 n=2000`、egress 拒 |
 | **live 依賴** | 無（純 python3，到處可 live） | OpenShell CLI + Docker | 上者 + 一次性 staged abi3 wheels |
-| **入口形態** | `.claude/commands/self-correcting-loop.md` | `.claude/commands/sandbox-openshell.md`（`/openshell-containment` 為 DOC-ONLY 別名） | **無**（DOC-ONLY，經 `/sandbox-openshell` 嫁接） |
+| **入口形態** | `.claude/commands/self-correcting-loop.md` | `.claude/commands/sandbox-openshell.md`（`/openshell-containment` 為 DOC-ONLY 別名） | `.claude/commands/turbovec.md`（compose openshell-containment） |
 
 > 三沙盒在本機**全部真跑出 exit 0 / count==0**（見各 RUN.md）；測試層在無 Docker/OpenShell 的機器上仍
 > 一鍵全綠（`bash run-tests.sh`，mock 外部邊界）。
