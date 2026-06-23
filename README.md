@@ -119,6 +119,18 @@ sandboxes/<name>/
 - **C4 全景圖註冊**：在 `PANORAMA.md` 有一 row + 一機器層 yaml block（存在 ≠ 接線，PG-157）。
 - **C5 啟動方式分別定義**：frontmatter + manifest 分別宣告 `/command` + 觸發詞 + 啟動前置。
 
+## 吸收來源（DR）
+
+每個沙盒是把一個外部想法**落地**的結果；那些想法的源頭 Deep Research 報告放在 [`research/`](research/)：
+
+- `openshell-containment` ← 「NVIDIA Open Shell + LangChain Deep Agents 零信任架構」DR
+- `turbovec` ← 「embedded 向量資料庫 / turbovec / TurboQuant RAG 重構」DR
+- `self-correcting-loop` ← 無 DR（源自使用者 prompt 協定）
+
+> ⚠ DR 是**原始綜述、非 vetted fact**——吸收時的 external-verify 抓出多處 overstated/未查證宣稱
+> （詳 [`research/README.md`](research/README.md)）。逐條查證的**裁決帳本（bridge）刻意未公開**（含 northstar
+> 內部安全架構）；ZK/KG ingestion 產物亦不公開。
+
 ## 設計紅線（這套東西的核心約束）
 
 - **engine-locus**：自轉只到 SURFACE / VERIFY；**WHAT 由人 admit、DECISION 結果由人接受**，沒有「自動接受結果的飛輪」。
