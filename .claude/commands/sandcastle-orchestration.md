@@ -17,7 +17,7 @@ activation_injection: true
 **可行組合**於 inner container 對 fixture/throwaway repo），dump `result.json`；經 boundary adapter（Path B，
 `sandboxes/sandcastle-orchestration/src/boundary_adapter.py`，本檔指向不複述）確定性投影成 observation-record，
 遞給人分流。可行組合 = sandcastle `head`-run（容器隔離跑）+ **主機端 plain git**（branch/commit = merge-back OUTCOME）
-+ **主機端 exec-gate**；**刻意繞開** sandcastle 自有 worktree merge-back（macOS docker 下壞，gitdir patch Windows-only）。
++ **主機端 exec-gate**；**刻意繞開** sandcastle 自有 worktree merge-back（macOS docker 下 run() **真跑壞**：worktree-id/session-capture，**非** win32 gitdir patch；見 RUN.md §4 真跑驗證）。
 邊界：auto-turn 鎖 inner container + fixture/throwaway repo，**沙盒永不碰宿主自己的工作 repo**；land 由人裁。
 
 ## 實時沙盒狀態（Dynamic Context Injection — 啟動瞬間快照，非過時猜測）
@@ -38,6 +38,9 @@ activation_injection: true
   observation-record 只**遞**給人分流，**永不**自動 land / 自動接受結果。
 - **誠實薄 delta**：本 command 不宣稱 sandcastle 自有 worktree merge-back 為能力（它壞）；
   merge-back OUTCOME 走主機端 plain git。真 delta（編排設計契約）由人後續評估，不在此斷言。
+- **RIP-settles-behavior**：sandcastle（或任何 repo）的 runtime/behavioral claim（如 merge-back 在某平台可不可用）
+  **只能靠一次完整 RIP 真跑定案**——源碼讀 / 窄 probe 都會 over-reach。實證見 RUN.md §4（窄 probe 一度誤推
+  「merge-back works」，完整 `run()` RIP 才證 macOS 真壞）。
 - **fail-loud 不吞 exit**：注入分支顯式 `|| echo "…"`；禁 `| tail` / `| head` 吞 exit。
 
 ## 參數
