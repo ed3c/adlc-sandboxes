@@ -1,4 +1,4 @@
-// Token-free probe v2 (#1 resolution) on sandcastle 0.10.0 (= npm latest = bridge/memory water-test version).
+// Token-free narrow probe on sandcastle 0.10.0 (= npm latest = the prior water-test version).
 // 0.10.0's high-level Sandbox has NO .exec() (added in 0.11.0), so we createWorktree(merge-to-head) +
 // createSandbox(docker) to get sandcastle's REAL container + worktree mount, then use raw `docker exec`
 // (no agent, no ANTHROPIC token) to run the EXACT 0.10.0 failure command `git checkout --detach` inside it.
