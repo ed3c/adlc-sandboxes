@@ -13,6 +13,7 @@
 | openshell-containment | enforced-containment exec + adversarial containment_probe | /sandbox-openshell | LIVE |
 | turbovec | air-gapped local vector search — index+self-query INSIDE ns-sandbox (count_metric==0) | /turbovec | LIVE |
 | self-correcting-loop | deterministic DECIDE gate for a PLAN/DO/VERIFY/DECIDE loop — FINAL iff ∀criterion ≥ threshold, else ITERATING + weakest focus; bounded no-progress/exhaustion guard | /self-correcting-loop | LIVE |
+| sandcastle-orchestration | run sandcastle's working composition (head-run container-isolated agent + host-git branch/commit = merge-back outcome + host exec-gate) against a fixture/throwaway repo, project to a deterministic observation-record | /sandcastle-orchestration | LIVE |
 
 ## 機器層（每沙盒一 block）
 
@@ -61,4 +62,13 @@ command: /self-correcting-loop
 triggers: [self-correcting-loop, 自我修正迴圈, rubric-gate, plan-do-verify-decide, 迭代收斂]
 launch_precondition: "!`python3 --version`"
 wiring: LIVE   # static + qa 5/5 + runtime selftest exit 0 (decide FINAL/ITERATING+focus + 2 fail-loud). runtime-proven.
+```
+
+```yaml sandbox
+name: sandcastle-orchestration
+exposed_capability: "run @ai-hero/sandcastle's working composition — sandcastle head-run (container-isolated agent execution) + host-side plain git (branch/commit = the merge-back OUTCOME) + host-side exec-gate (node --test between stages) — against a fixture/throwaway repo, then project the rip-result.json into a deterministic observation-record (boundary_adapter.py, pure python). Deliberately avoids sandcastle's own worktree merge-back (broken on macOS docker, gitdir patch is Windows-only). Honest thin delta: the container-isolated half ≈ a generic containment sandbox; the real delta is sandcastle's orchestration design contract."
+command: /sandcastle-orchestration
+triggers: [sandcastle, container-isolated agent orchestration, 招牌組合, agent-orchestration RIP study vehicle, exec-gate, observation-record, sandcastle-orchestration]
+launch_precondition: "!`timeout 5 docker info --format '{{.ServerVersion}}' 2>&1 | head -1 || echo '[docker-down]'`"
+wiring: LIVE   # static + qa 6/6 + runtime boundary_adapter selftest exit 0 (Path B deterministic projection, runtime-proven). Path A (the probabilistic RIP run) additionally needs Docker + Node + a Claude OAuth token — see RUN.md honest boundary.
 ```

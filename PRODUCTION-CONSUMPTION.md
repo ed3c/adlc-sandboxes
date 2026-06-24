@@ -8,6 +8,7 @@
 > | self-correcting-loop | [RUN.md](sandboxes/self-correcting-loop/RUN.md) | [.claude/commands/self-correcting-loop.md](.claude/commands/self-correcting-loop.md) |
 > | openshell-containment | [RUN.md](sandboxes/openshell-containment/RUN.md) | [.claude/commands/sandbox-openshell.md](.claude/commands/sandbox-openshell.md) |
 > | turbovec | [RUN.md](sandboxes/turbovec/RUN.md) | [.claude/commands/turbovec.md](.claude/commands/turbovec.md)（compose openshell-containment） |
+> | sandcastle-orchestration | [RUN.md](sandboxes/sandcastle-orchestration/RUN.md) | [.claude/commands/sandcastle-orchestration.md](.claude/commands/sandcastle-orchestration.md) |
 
 ## 通用框架 — 一條雙向 producer↔consumer 鏈
 

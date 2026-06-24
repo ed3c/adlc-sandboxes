@@ -1,0 +1,53 @@
+{
+  "schema": "sandcastle-observation-record/v1",
+  "iso": "2026-06-24",
+  "source_result": "tests/fixtures/result.sample.json",
+  "composition": "sandcastle-head-run + host-git + host-exec-gate",
+  "capabilities_exercised": {
+    "container_isolation": true,
+    "exec_gate": {
+      "ran": true,
+      "verdict": "pass",
+      "command": "node --test",
+      "exit": 0
+    },
+    "branch_merge_back_outcome": {
+      "landed": true,
+      "branch": "agent/fix-sum",
+      "commit": "879cea7cb854c59dc25034fa7edcfaaaf978710e",
+      "via": "host-git"
+    },
+    "multi_stage": {
+      "implement": true,
+      "review": true
+    }
+  },
+  "agent_runs": [
+    {
+      "stage": "implement",
+      "iterations": 1,
+      "completion_signal": "<promise>COMPLETE</promise>",
+      "tokens": {
+        "input": 1,
+        "cache_creation": 190,
+        "cache_read": 22579,
+        "output": 32
+      }
+    },
+    {
+      "stage": "review",
+      "iterations": 1,
+      "completion_signal": "<promise>COMPLETE</promise>",
+      "tokens": {
+        "input": 1,
+        "cache_creation": 549,
+        "cache_read": 22258,
+        "output": 27
+      }
+    }
+  ],
+  "containment": {
+    "target_repo": "/tmp/sandcastle-target",
+    "host_repo_touched": false
+  }
+}

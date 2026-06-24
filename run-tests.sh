@@ -23,6 +23,8 @@ run "self-correcting-loop · selftest" bash -c 'cd "'"$ROOT"'/sandboxes/self-cor
 run "self-correcting-loop · pytest"   python3 -m pytest -q sandboxes/self-correcting-loop/tests/
 run "openshell-containment · pytest"  python3 -m pytest -q sandboxes/openshell-containment/tests/
 run "turbovec · pytest"               python3 -m pytest -q sandboxes/turbovec/tests/
+run "sandcastle-orchestration · selftest" bash -c 'cd "'"$ROOT"'/sandboxes/sandcastle-orchestration" && python3 src/boundary_adapter.py selftest --iso 2026-06-24'
+run "sandcastle-orchestration · pytest"   python3 -m pytest -q sandboxes/sandcastle-orchestration/tests/
 
 if [ "$fail" -eq 0 ]; then echo "ALL GREEN ✅"; else echo "SOME FAILED ❌"; fi
 exit "$fail"

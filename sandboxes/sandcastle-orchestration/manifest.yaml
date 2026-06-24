@@ -1,0 +1,16 @@
+# sandboxes/sandcastle-orchestration/manifest.yaml — machine-parsable interface declaration.
+# The validation gate's static tier parses exposed_capabilities + launch + runtime_trace_cmd + qa_fixture.
+name: sandcastle-orchestration               # == dir == SKILL.md frontmatter name == /command == PANORAMA block
+exposed_capabilities:
+  - "真跑 @ai-hero/sandcastle 可行組合 (working composition): sandcastle head-run (container-isolated agent execution) + 主機端 plain git (branch/commit = merge-back OUTCOME) + 主機端 exec-gate (stage 間 node --test) 於 inner container 對 fixture/throwaway repo，dump result.json (RIP run, Path A, 人 on-demand)。刻意繞開 sandcastle 自有 worktree merge-back (macOS docker 下壞)。"
+  - "確定性觀察：boundary adapter (src/boundary_adapter.py) 把 result.json 純函數投影成 observation-record (container-isolation / exec-gate verdict / branch-merge-back-outcome via host-git / iteration 數 / token / 時序)，餵下游分流給人 (Path B, 無 Docker/token)。"
+launch:
+  command: /sandcastle-orchestration
+  triggers: [sandcastle, container-isolated agent orchestration, 招牌組合, agent-orchestration RIP study vehicle, exec-gate, observation-record, sandcastle-orchestration]
+  precondition: "!`timeout 5 docker info --format '{{.ServerVersion}}' 2>&1 | head -1 || echo '[docker-down]'`"
+src_entry: src/run_sandcastle.ts             # Path A seam (RIP run, working composition)
+# runtime tier runs runtime_trace_cmd with cwd=sandbox dir. boundary_adapter selftest 打凍結 fixture
+# (tests/fixtures/result.sample.json) → 斷言 observation-record well-formed → exit 0。純 python、無 Docker/token。
+# Path B seam = src/boundary_adapter.py.
+runtime_trace_cmd: "python3 src/boundary_adapter.py selftest --iso 2026-06-24"
+qa_fixture: tests/qa.golden.yaml

@@ -2,10 +2,10 @@
 
 # adlc-sandboxes
 
-**Three small, self-contained sandboxes — each turns one external idea into a runnable, deterministically-verified capability you can invoke as a Claude Code `/command`.**
+**Four small, self-contained sandboxes — each turns one external idea into a runnable, deterministically-verified capability you can invoke as a Claude Code `/command`.**
 
-![sandboxes](https://img.shields.io/badge/sandboxes-3-blue)
-![tests](https://img.shields.io/badge/tests-38_passing-brightgreen)
+![sandboxes](https://img.shields.io/badge/sandboxes-4-blue)
+![tests](https://img.shields.io/badge/tests-80_passing-brightgreen)
 ![runtime](https://img.shields.io/badge/runtime-python3-blue)
 ![API keys](https://img.shields.io/badge/API_keys-zero-success)
 ![status](https://img.shields.io/badge/status-showcase-lightgrey)
@@ -35,9 +35,13 @@
  │               │        │   boundary)      │        │  + !`cmd` injection│
  └───────────────┘        └──────────────────┘        └────────────────────┘
 
- zero-trust DR  ───▶  openshell-containment  ───▶  /sandbox-openshell      [LIVE]
- embedded-vec DR ──▶  turbovec               ───▶  /turbovec               [LIVE]
- user protocol  ───▶  self-correcting-loop   ───▶  /self-correcting-loop   [LIVE]
+ zero-trust DR  ───▶  openshell-containment  ───▶  /sandbox-openshell        [LIVE]
+ embedded-vec DR ──▶  turbovec               ───▶  /turbovec                 [LIVE]
+ user protocol  ───▶  self-correcting-loop   ───▶  /self-correcting-loop     [LIVE]
+ sandcastle orch ─▶  sandcastle-orchestration ──▶  /sandcastle-orchestration [LIVE*]
+
+ *Path B (deterministic observation-record projection) is LIVE on python3 alone;
+  Path A (the probabilistic RIP run) additionally needs Docker + Node + a Claude OAuth token.
 ```
 
 ---
@@ -64,13 +68,14 @@
 
 ## Sandboxes
 
-**沙盒一覽（3 個全完成單元）**
+**沙盒一覽（4 個全完成單元）**
 
 | 沙盒 | 暴露能力 | `/command` | 一鍵跑綠 | live 能力另需 |
 |------|---------|-----------|----------|-------------|
 | `openshell-containment` | OpenShell default-deny egress + fs 隔離下的 enforced-containment 執行 + 對抗式 containment_probe（count_metric==0 = 完全 contained） | `/openshell-containment` · `/sandbox-openshell` | ✅ 8 passed | OpenShell + Docker |
 | `turbovec` | air-gapped 本地向量檢索——index+self-query 全在 containment 內（count_metric==0 = 不出機器；composes openshell-containment） | `/turbovec` | ✅ 5 passed | 上者 + staged wheels |
 | `self-correcting-loop` | PLAN/DO/VERIFY/DECIDE 的確定性 DECIDE 閘——∀criterion ≥ threshold → FINAL，否則 ITERATING + 最弱項；有界 no-progress / exhaustion 守衛；零 LLM-judge | `/self-correcting-loop` | ✅ 25 passed + selftest 6/6 | 無（live 也只需 python3） |
+| `sandcastle-orchestration` | 真跑 @ai-hero/sandcastle 可行組合（head-run 容器隔離 agent + 主機端 plain git = merge-back OUTCOME + 主機端 exec-gate）對 fixture/throwaway repo，確定性投影成 observation-record | `/sandcastle-orchestration` | ✅ 42 passed + selftest 7/7 | Path A RIP run 另需 Docker + Node + Claude OAuth token（Path B 投影只需 python3） |
 
 全景圖（機械可驗的 wiring 真相）：[`sandboxes/PANORAMA.md`](sandboxes/PANORAMA.md)。
 
@@ -82,8 +87,9 @@
 
 ```bash
 bash run-tests.sh
-# → 3 沙盒的 test 套件 + self-correcting-loop selftest，全綠時 exit 0：
-#   self-correcting-loop · selftest ✅ / pytest 25 ✅ · openshell-containment 8 ✅ · turbovec 5 ✅ → ALL GREEN
+# → 4 沙盒的 test 套件 + 2 個 selftest，全綠時 exit 0：
+#   self-correcting-loop · selftest ✅ / pytest 25 ✅ · openshell-containment 8 ✅ · turbovec 5 ✅
+#   · sandcastle-orchestration · selftest ✅ / pytest 42 ✅ → ALL GREEN（80 passing）
 ```
 
 只需 `python3` + `pytest`（`pip install pytest`）——**無** Docker / OpenShell / Ollama（測試把外部邊界 mock 掉）。
@@ -140,6 +146,17 @@ python3 sandboxes/openshell-containment/src/containment_probe.py --iso 2026-06-2
 # turbovec — 需 openshell-containment 就緒 + 一次性 stage 離線 wheel
 bash sandboxes/turbovec/src/stage_turbovec_wheels.sh
 python3 sandboxes/turbovec/src/containment_rag_probe.py -n ns-sandbox
+
+# sandcastle-orchestration — Path B（確定性投影）純 python3，立即可跑（selftest 7/7）
+(cd sandboxes/sandcastle-orchestration && python3 src/boundary_adapter.py selftest --iso 2026-06-24)
+(cd sandboxes/sandcastle-orchestration && \
+  python3 src/boundary_adapter.py emit --result tests/fixtures/result.sample.json --iso 2026-06-24)
+# → 把一份 rip-result.json 純函數投影成 observation-record（container-isolation / exec-gate verdict /
+#   branch-merge-back-outcome / token / 多階段）
+
+# sandcastle-orchestration — Path A（真 RIP run）另需 Docker + Node + 一次性 Claude OAuth token
+#   token 放 throwaway repo 的 .sandcastle/.env；目標 repo 預設 $TMPDIR/sandcastle-target（SANDCASTLE_TARGET 可覆寫）
+(cd sandboxes/sandcastle-orchestration && npx tsx src/run_sandcastle.ts)
 ```
 
 ---
@@ -148,14 +165,17 @@ python3 sandboxes/turbovec/src/containment_rag_probe.py -n ns-sandbox
 
 **誠實邊界（什麼能跑、什麼需要設定）：**
 
-- **每個沙盒都可一鍵跑綠**（`bash run-tests.sh`，只需 python3 + pytest，**無** Docker / OpenShell / Ollama）：
-  openshell-containment 8 · turbovec 5 · self-correcting-loop 25 passed + selftest 6/6。測試把外部邊界 mock 掉。
+- **每個沙盒都可一鍵跑綠**（`bash run-tests.sh`，只需 python3 + pytest，**無** Docker / OpenShell / Ollama / Node / token）：
+  openshell-containment 8 · turbovec 5 · self-correcting-loop 25 + selftest 6/6 · sandcastle-orchestration 42 + selftest 7/7
+  （共 80 passing）。測試把外部邊界 mock / 投影掉。
 - **完整 live 能力**：`self-correcting-loop` 純 python3 即為 live；`openshell-containment`（真實 enforced containment）
-  需 OpenShell CLI + Docker；`turbovec`（air-gapped RAG）再加一次性 staged wheels。重型 probe 會寫
-  `data/...`，首次跑可能要先 `mkdir -p` 該輸出目錄。
-- **入口**：隨附 `.claude/commands/` 三個入口（`self-correcting-loop.md` · `sandbox-openshell.md` · `turbovec.md`）
-  是 Claude Code 載入 / 驅動沙盒的真入口（`/turbovec` compose openshell-containment）。各沙盒實際運作見 `RUN.md`，
-  框架見 `PRODUCTION-CONSUMPTION.md`。
+  需 OpenShell CLI + Docker；`turbovec`（air-gapped RAG）再加一次性 staged wheels；`sandcastle-orchestration`
+  的 **Path B**（observation-record 投影）純 python3 即 live，**Path A**（probabilistic RIP run = 容器內 agent 真跑）
+  另需 Docker + Node + 一次性 Claude OAuth token（agent run 非確定，故靠真跑一次證明，不 mock）。重型 probe 會寫
+  `trace/...`，首次跑可能要先 `mkdir -p` 該輸出目錄。
+- **入口**：隨附 `.claude/commands/` 四個入口（`self-correcting-loop.md` · `sandbox-openshell.md` · `turbovec.md`
+  · `sandcastle-orchestration.md`）是 Claude Code 載入 / 驅動沙盒的真入口（`/turbovec` compose openshell-containment）。
+  各沙盒實際運作見 `RUN.md`，框架見 `PRODUCTION-CONSUMPTION.md`。
 - **Zero-API-Key**：常駐檢索 / 嵌入 / rerank 100% 本地化（Ollama），**無雲端 key**。
 
 ---
@@ -167,6 +187,8 @@ python3 sandboxes/turbovec/src/containment_rag_probe.py -n ns-sandbox
 - `openshell-containment` ← 「NVIDIA Open Shell + LangChain Deep Agents 零信任架構」DR
 - `turbovec` ← 「embedded 向量資料庫 / turbovec / TurboQuant RAG 重構」DR
 - `self-correcting-loop` ← 無 DR（源自使用者 prompt 協定）
+- `sandcastle-orchestration` ← 無 DR（直接吸收 `@ai-hero/sandcastle` 的容器隔離 agent 編排設計契約；
+  誠實邊界：live RIP run 需 Docker + Node + Claude OAuth token，自有 worktree merge-back 在 macOS docker 下本就壞，故繞開）
 
 > ⚠ DR 是**原始綜述、非 vetted fact**——吸收時的 external-verify 抓出多處 overstated / 未查證宣稱
 > （詳 [`research/README.md`](research/README.md)）。把這兩份 DR 當**原始吸收輸入**讀，不是已查證事實。
@@ -179,7 +201,7 @@ python3 sandboxes/turbovec/src/containment_rag_probe.py -n ns-sandbox
 adlc-sandboxes/
 ├── run-tests.sh              ← 一鍵 runnable proof（3 沙盒 test + selftest 全綠）
 ├── PRODUCTION-CONSUMPTION.md ← 沙盒在 Claude Code 的生產消費關係（總覽）
-├── .claude/commands/         ← /command 入口（self-correcting-loop · sandbox-openshell）
+├── .claude/commands/         ← /command 入口（self-correcting-loop · sandbox-openshell · turbovec · sandcastle-orchestration）
 ├── research/                 ← 各沙盒吸收的源 DR 報告（raw Gemini DR export，非 vetted fact）
 └── sandboxes/
     ├── PANORAMA.md           ← 全景圖（沙盒 wiring 的 live 真相；機器可解 yaml block）

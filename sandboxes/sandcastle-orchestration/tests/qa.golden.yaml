@@ -1,0 +1,34 @@
+# sandboxes/sandcastle-orchestration/tests/qa.golden.yaml — fold_in_sandbox_gate qa tier fixture.
+# BOW-cosine (deterministic, no Ollama) scores each query against THIS sandbox's SKILL.md routing surface
+# (frontmatter description + when_to_use + triggers ONLY — body not scored); actual = trigger if cosine >
+# min_score else no_trigger. regression green iff every actual == expected_current (PG-214 behavioral-golden).
+# expected_current = MEASURED baseline — filled from an actual `--tier qa` run, NEVER predicted.
+schema: sandbox-qa-golden/v1
+min_score: 0.05
+cases:
+  # should-trigger: queries sharing real tokens with THIS sandbox's routing surface
+  - id: QA-01
+    query: "run the sandcastle orchestration sandbox: container-isolated agent orchestration with exec-gate and branch merge-back"
+    ground_truth: trigger
+    expected_current: trigger
+  - id: QA-02
+    query: "真跑 sandcastle 招牌組合 container-isolated agent orchestration，做 agent-orchestration RIP study vehicle"
+    ground_truth: trigger
+    expected_current: trigger
+  - id: QA-03
+    query: "container-isolated agent orchestration RIP study vehicle, observe sandcastle execution into a deterministic observation-record"
+    ground_truth: trigger
+    expected_current: trigger
+  # should-not-trigger: adjacent-domain queries that must route to NEIGHBOR sandboxes, not here
+  - id: QA-04
+    query: "run a self-correcting loop and decide FINAL or ITERATING against a rubric, give the weakest focus"
+    ground_truth: no_trigger
+    expected_current: no_trigger
+  - id: QA-05
+    query: "launch the openshell containment sandbox with default-deny egress isolation"
+    ground_truth: no_trigger
+    expected_current: no_trigger
+  - id: QA-06
+    query: "index documents into the local turbovec vector store for air-gapped retrieval"
+    ground_truth: no_trigger
+    expected_current: no_trigger
