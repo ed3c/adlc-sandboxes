@@ -106,7 +106,7 @@ $ python3 -m pytest -q tests/
 
 - **誠實薄 delta**：可行的那半（容器隔離跑）≈ 一般 containment 沙盒；真 delta = sandcastle 的**編排設計契約**
   （provider-agnostic + implement→exec-gate→review + iteration/prompt ergonomics）。本沙盒**不**宣稱 sandcastle
-  自有 worktree merge-back 為能力——它在 macOS docker 下**本就壞**（gitdir patch 是 Windows-only），故組合**刻意繞開**它，
+  自有 worktree merge-back 為能力——它在 macOS docker 下 run() **真跑壞**（成因 = worktree-id/session-capture，**非** win32 gitdir patch；真跑驗證見下方 §4），故組合**刻意繞開**它，
   改用主機端 plain git；「merge-back」在此是 OUTCOME（一個 branch + commit），≈ host git merge，不是 sandcastle 的能力宣稱。
 - **Path A（RIP run）需 Docker + Node + 一次性 Claude OAuth token**（容器內 agent）。token 放在 throwaway repo 的
   `.sandcastle/.env`（gitignored）；目標 repo 預設在 `$TMPDIR/sandcastle-target`，可用 `SANDCASTLE_TARGET` 覆寫。
@@ -116,3 +116,36 @@ $ python3 -m pytest -q tests/
 - adapter 是純函數投影（無 Ollama / 無網路 / 無 `datetime.now`，iso 由 caller 供）；`trace/*.log` gitignored，
   committed observation-record 是凍結 fixture（`tests/fixtures/result.sample.json`）。
 - **沙盒不自動接受結果**：observation-record 只遞給人分流，哪個 delta 真 land = 人類 LAND-DECISION，非自動續跑。
+
+## 4. 招牌 merge-back 真跑驗證（RIP — macOS 上 reproduced-BROKEN，含誠實過程）
+
+sandcastle 的**招牌特性** = 自有 worktree branch-merge-back（`branchStrategy: merge-to-head / branch`）。本沙盒的可行組合
+**刻意繞開**它、改用主機端 plain git——這節用一條**真跑鏈**記錄「為什麼」，並誠實記下我們一度判錯、又被真跑糾正。
+
+**三步真跑（每步都是真命令、真 exit code）：**
+
+1. **窄 probe（token-free）** `src/gitdir-probe.ts`：`createWorktree(merge-to-head) + createSandbox + 原生 docker exec`。
+   容器把 host `.git` 掛在**同一絕對路徑**（mount source==target），故 worktree gitdir 解析得了、`git checkout --detach`
+   **exit 0**。→ 一度據此推論「merge-back 在 macOS 可用」。**但這是過度推論——窄 probe ≠ 完整 `run()`。**
+
+2. **完整 run() merge-to-head（真 agent）** `src/run-mtb.ts`（需 Docker + 一次性 OAuth token；agent 達
+   `<promise>COMPLETE</promise>`）：
+
+   ```console
+   $ npx tsx src/run-mtb.ts
+   [mtb] Started on branch sandcastle/mtb/...-d29484
+   Agent started → <promise>COMPLETE</promise> → Agent stopped → Capturing session
+   ExecError: Command failed (exit 128): git checkout --detach
+   fatal: not a git repository: <repo>/.git/worktrees/sandcastle-mtb-...-d59026
+   ```
+
+   → **REPRODUCIBLY FAILS on macOS @0.10.0**：在 "Capturing session" 後跑 `git checkout --detach` 撞 **worktree-id 不匹配**
+   （容器 ref `d59026` ≠ run branch `d29484`），**零 commit 落地**、fixture 保持乾淨。重現了招牌 merge-back 的失敗。
+
+3. **裁定**：招牌 worktree merge-back 在 macOS @0.10.0 **真壞**——成因是 **worktree-id / session-capture 路徑**，
+   **不是** `patchGitMountsForWindows`（那只是 Windows 磁碟機冒號的 mount 修補，posix 上 no-op 是正確的）。host 端
+   `git merge` 本身平台無關，但 run() 撞容器端 `checkout --detach` 先掛、根本到不了 host merge。
+
+**方法論教訓（RIP-study 的精華）**：**runtime 行為只能靠完整 RIP 真跑定案。** 步驟 1 的窄 probe 一度誤推「works」，
+若就此收手會把錯結論當事實——只有步驟 2 的完整 `run()` 才釘死真相。**源碼讀 + 窄 probe 對 runtime 行為系統性
+over-reach；真跑（RIP）才是行為的權威。** 這正是本沙盒「可行組合走 head-run + 主機端 git」的硬理由。
