@@ -116,10 +116,14 @@ bash run-tests.sh
 
 ### A — 當成 Claude Code skill / `/command` 用
 
-本 repo **隨附三個 `/command` 入口**（[`.claude/commands/`](.claude/commands/)：`self-correcting-loop.md` ·
-`sandbox-openshell.md` · `turbovec.md`）。clone 後把本 repo 當 project 開（**cwd 在 repo 根**），
-`/self-correcting-loop`、`/sandbox-openshell`、`/turbovec` 即可直接調用（`/turbovec` compose openshell-containment，
-入口的 launch contract 會先確認 openshell gateway + turbovec staged 兩個前置）。
+本 repo **隨附七個 `/command` 入口**（[`.claude/commands/`](.claude/commands/)）：
+
+- **原 4 個**：`/sandbox-openshell` · `/turbovec` · `/self-correcting-loop` · `/sandcastle-orchestration`
+- **DR-judge fleet（3 個，純 python3）**：`/arch-fitness` · `/capacity-estimation` · `/fullstack-design-judge`
+
+clone 後把本 repo 當 project 開（**cwd 在 repo 根**）即可直接調用。`/turbovec` compose openshell-containment
+（launch contract 會先確認 openshell gateway + turbovec staged 兩個前置）；fleet 三者 compose self-correcting-loop
+kernel（無需額外 infra）。
 
 也可把單一沙盒接成你自己的 skill：
 
@@ -163,8 +167,17 @@ python3 sandboxes/turbovec/src/containment_rag_probe.py -n ns-sandbox
 #   branch-merge-back-outcome / token / 多階段）
 
 # sandcastle-orchestration — Path A（真 RIP run）另需 Docker + Node + 一次性 Claude OAuth token
-#   token 放 throwaway repo 的 .sandcastle/.env；目標 repo 預設 $TMPDIR/sandcastle-target（SANDCASTLE_TARGET 可覆寫）
+#   token 放 throwaway repo 的 sandcastle 設定；目標 repo 預設 $TMPDIR/sandcastle-target（SANDCASTLE_TARGET 可覆寫）
 (cd sandboxes/sandcastle-orchestration && npx tsx src/run_sandcastle.ts)
+
+# DR-judge fleet — 全部純 python3，立即可跑（確定性 Judge/evals 標準，DECIDE 復用 self-correcting-loop kernel）：
+(cd sandboxes/arch-fitness && python3 src/arch_fitness_kernel.py selftest --iso 2026-06-24)            # 13/13
+(cd sandboxes/arch-fitness && python3 src/arch_fitness_kernel.py measure \
+   --target fixtures/sample_project --spec fixtures/sample_project.arch.yaml --iso 2026-06-24)         # → verdict=FAIL + 違規
+(cd sandboxes/capacity-estimation && python3 src/capacity_kernel.py selftest --iso 2026-06-24)         # 20/20
+(cd sandboxes/capacity-estimation && python3 src/capacity_kernel.py estimate \
+   --spec src/fixtures/dr-example-spec.json)                                                           # → DR 五步指標
+(cd sandboxes/fullstack-design-judge && python3 src/judge_selftest.py --iso 2026-06-24)                # 7/7 + CONSUMED:self-correcting-loop
 ```
 
 ---
@@ -174,15 +187,22 @@ python3 sandboxes/turbovec/src/containment_rag_probe.py -n ns-sandbox
 **誠實邊界（什麼能跑、什麼需要設定）：**
 
 - **每個沙盒都可一鍵跑綠**（`bash run-tests.sh`，只需 python3 + pytest，**無** Docker / OpenShell / Ollama / Node / token）：
-  openshell-containment 8 · turbovec 5 · self-correcting-loop 25 + selftest 6/6 · sandcastle-orchestration 42 + selftest 7/7
-  （共 80 passing）。測試把外部邊界 mock / 投影掉。
-- **完整 live 能力**：`self-correcting-loop` 純 python3 即為 live；`openshell-containment`（真實 enforced containment）
-  需 OpenShell CLI + Docker；`turbovec`（air-gapped RAG）再加一次性 staged wheels；`sandcastle-orchestration`
-  的 **Path B**（observation-record 投影）純 python3 即 live，**Path A**（probabilistic RIP run = 容器內 agent 真跑）
-  另需 Docker + Node + 一次性 Claude OAuth token（agent run 非確定，故靠真跑一次證明，不 mock）。重型 probe 會寫
-  `trace/...`，首次跑可能要先 `mkdir -p` 該輸出目錄。
-- **入口**：隨附 `.claude/commands/` 四個入口（`self-correcting-loop.md` · `sandbox-openshell.md` · `turbovec.md`
-  · `sandcastle-orchestration.md`）是 Claude Code 載入 / 驅動沙盒的真入口（`/turbovec` compose openshell-containment）。
+  openshell-containment 8 · turbovec 5 · self-correcting-loop 37 + selftest · sandcastle-orchestration 42 + selftest 7/7 ·
+  arch-fitness 27 + selftest 13/13 · capacity-estimation 50 + selftest 20/20 · fullstack-design-judge selftest 7/7
+  （共 **169 passing**）。測試把外部邊界 mock / 投影掉。
+- **完整 live 能力**：
+  - **純 python3 即為 live（無需任何額外 infra）**：`self-correcting-loop`，及 **DR-judge fleet** —
+    `arch-fitness` / `capacity-estimation` / `fullstack-design-judge`（確定性 Judge/evals 標準，DECIDE 復用
+    self-correcting-loop kernel）。
+  - `openshell-containment`（真實 enforced containment）需 OpenShell CLI + Docker；`turbovec`（air-gapped RAG）
+    再加一次性 staged wheels。
+  - `sandcastle-orchestration` 的 **Path B**（observation-record 投影）純 python3 即 live，**Path A**
+    （probabilistic RIP run = 容器內 agent 真跑）另需 Docker + Node + 一次性 Claude OAuth token（agent run 非確定，
+    故靠真跑一次證明，不 mock）。重型 probe 會寫 `trace/...`，首次跑可能要先 `mkdir -p` 該輸出目錄。
+- **入口**：隨附 `.claude/commands/` **七個**入口 —— 原 4 個（`sandbox-openshell.md` · `turbovec.md` ·
+  `self-correcting-loop.md` · `sandcastle-orchestration.md`）＋ DR-judge fleet（`arch-fitness.md` ·
+  `capacity-estimation.md` · `fullstack-design-judge.md`）—— 是 Claude Code 載入 / 驅動沙盒的真入口
+  （`/turbovec` compose openshell-containment；fleet 三者 compose self-correcting-loop kernel）。
   各沙盒實際運作見 `RUN.md`，框架見 `PRODUCTION-CONSUMPTION.md`。
 - **Zero-API-Key**：常駐檢索 / 嵌入 / rerank 100% 本地化（Ollama），**無雲端 key**。
 
@@ -194,12 +214,15 @@ python3 sandboxes/turbovec/src/containment_rag_probe.py -n ns-sandbox
 
 - `openshell-containment` ← 「NVIDIA Open Shell + LangChain Deep Agents 零信任架構」DR
 - `turbovec` ← 「embedded 向量資料庫 / turbovec / TurboQuant RAG 重構」DR
+- `arch-fitness` ← 「軟體架構的戰略與戰術雙重奏：領域邊界劃分 → 代碼演進治理」DR
+- `capacity-estimation` ← 「AI Agent 時代的計算系統容量估算與架構設計」DR
+- `fullstack-design-judge` ← 「現代分散式系統架構：前後端需求拆分 / BFF 模式演進 / AI Agent 異步任務調度」DR
 - `self-correcting-loop` ← 無 DR（源自使用者 prompt 協定）
 - `sandcastle-orchestration` ← 無 DR（直接吸收 `@ai-hero/sandcastle` 的容器隔離 agent 編排設計契約；
   誠實邊界：live RIP run 需 Docker + Node + Claude OAuth token，自有 worktree merge-back 在 macOS docker 下本就壞，故繞開）
 
 > ⚠ DR 是**原始綜述、非 vetted fact**——吸收時的 external-verify 抓出多處 overstated / 未查證宣稱
-> （詳 [`research/README.md`](research/README.md)）。把這兩份 DR 當**原始吸收輸入**讀，不是已查證事實。
+> （詳 [`research/README.md`](research/README.md) 與各 `DR-TO-RUN-MAP.md` 的 ✅/⚠/❌ 裁定欄）。把這 5 份 DR 當**原始吸收輸入**讀，不是已查證事實。
 
 ---
 
@@ -207,9 +230,9 @@ python3 sandboxes/turbovec/src/containment_rag_probe.py -n ns-sandbox
 
 ```
 adlc-sandboxes/
-├── run-tests.sh              ← 一鍵 runnable proof（3 沙盒 test + selftest 全綠）
+├── run-tests.sh              ← 一鍵 runnable proof（7 沙盒 test + selftest 全綠，169 passing）
 ├── PRODUCTION-CONSUMPTION.md ← 沙盒在 Claude Code 的生產消費關係（總覽）
-├── .claude/commands/         ← /command 入口（self-correcting-loop · sandbox-openshell · turbovec · sandcastle-orchestration）
+├── .claude/commands/         ← /command 入口 ×7（sandbox-openshell · turbovec · self-correcting-loop · sandcastle-orchestration · arch-fitness · capacity-estimation · fullstack-design-judge）
 ├── research/                 ← 各沙盒吸收的源 DR 報告（raw Gemini DR export，非 vetted fact）
 └── sandboxes/
     ├── PANORAMA.md           ← 全景圖（沙盒 wiring 的 live 真相；機器可解 yaml block）

@@ -51,10 +51,10 @@
 | ② 的判斷：評分（VERIFY）、寫待執行碼 | ① 的真實 runtime 狀態快照 |
 
 **沒有「沙盒自動接受結果、自動續跑」的循環。** 達標與否由確定性 kernel 裁；是否接受由人。
-這就是為什麼三個沙盒的「達標」判定（FINAL / fully-contained / air-gapped）全部由**確定性 kernel**
+這就是為什麼**每個沙盒**的「達標」判定（FINAL / fully-contained / air-gapped / FEASIBLE / PASS）全部由**確定性 kernel**
 （real scores / exit code / `count_metric`）裁，而不是 agent 說「我覺得可以了」。
 
-## 三沙盒對照（同一框架，三種裁決度量）
+## 原 3 沙盒對照（同一框架，三種裁決度量）
 
 | | self-correcting-loop | openshell-containment | turbovec |
 |---|---|---|---|
@@ -67,6 +67,22 @@
 
 > 三沙盒在本機**全部真跑出 exit 0 / count==0**（見各 RUN.md）；測試層在無 Docker/OpenShell 的機器上仍
 > 一鍵全綠（`bash run-tests.sh`，mock 外部邊界）。
+
+## 其餘 4 沙盒（同一框架，各自的裁決度量）— 條列式
+
+後加入的 4 個沙盒套同一條「Claude 生產 ↔ 沙盒確定性 kernel 生產裁決」鏈，只是裁決度量不同：
+
+- **sandcastle-orchestration** — ① 注入 sandcastle run 狀態 → ② host-run 容器隔離 agent（Path A）/ Path B 純函數投影 →
+  ③ 裁決度量 = `observation-record`（container-isolation / exec-gate verdict / branch-merge-back-outcome，純函數零 LLM）→
+  入口 `.claude/commands/sandcastle-orchestration.md`。live：Path B 純 python3；Path A 另需 Docker + Node + 一次性 token。
+- **DR-judge fleet（純 python3，DECIDE 復用 `self-correcting-loop` kernel）** — ① 注入 Judge 當前 rubric/狀態 →
+  ② Claude 對 target 評分 / 量測 → ③ 裁決度量各異，全確定性：
+  - `arch-fitness` — `verdict=PASS iff 0 hard 違規` + `focus`（Clean-Arch 分層 / module-boundary / Martin I/A/D / AST 壞味道）。
+  - `capacity-estimation` — `FEASIBLE(exit0)/INFEASIBLE(exit3)` + 綁定約束 + 宏觀/微觀槓桿（5 DR 容量指標 vs budget）。
+  - `fullstack-design-judge` — `FINAL/ITERATING` over 10 macro + 11 micro 軸；runtime trace 印 `CONSUMED:self-correcting-loop`。
+  - 入口：`.claude/commands/{arch-fitness,capacity-estimation,fullstack-design-judge}.md`；live 全部只需 python3。
+
+> 7 沙盒一鍵全綠（`bash run-tests.sh` → ALL GREEN，169 passing）；裁決全由確定性 kernel 產，非 agent 散文宣稱。
 
 ## 一鍵重現
 
