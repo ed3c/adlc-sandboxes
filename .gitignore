@@ -8,6 +8,20 @@ venv/
 # os
 .DS_Store
 
+# SECRETS — never commit credentials/tokens to this public mirror.
+# (The sandcastle-orchestration Path-A run uses a Claude OAuth token; it lives in a THROWAWAY repo's
+#  sandcastle config OUTSIDE this mirror and must NEVER be uploaded — no auth tokens of any kind.)
+.env
+.env.*
+*.env
+.sandcastle/
+**/.sandcastle/
+*token*.json
+*credentials*
+*secret*
+*.pem
+*.key
+
 # sandbox runtime artifacts (state dirs keep only .gitkeep + their own .gitignore)
 sandboxes/*/state/*
 !sandboxes/*/state/.gitkeep
