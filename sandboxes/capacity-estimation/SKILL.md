@@ -18,7 +18,7 @@ triggers: [capacity-estimation, 容量估算, agent-capacity, vram-sizing, kv-ca
 # capacity-estimation — AI-Agent 容量估算器 + 可行性 rubric judge（DR 完整框架的確定性編碼）
 
 > 沙盒接口契約文件：本 SKILL.md 是這個沙盒的接口契約，受沙盒的驗證 gate 機械驗
-> （`sandboxes/` 非 skill root，故不被動載入；直接以下方 `capacity_kernel.py` 調用）。
+> （`sandboxes/` 非 skill root，故不被動載入；可調用入口 = [`.claude/commands/capacity-estimation.md`](../../.claude/commands/capacity-estimation.md)，或直接跑下方 `capacity_kernel.py`）。
 > 分工原則：kernel 只做確定性**估算 + 可行性裁定**（formulas + budget 比較）；spec/budgets 由人提供、
 > FEASIBLE/INFEASIBLE 結果與架構決策由人接受——本接口不自動接受結果（一個人接受最終結果）。
 

@@ -12,7 +12,7 @@ allowed-tools: Bash(python3 sandboxes/arch-fitness/src/arch_fitness_kernel.py:*)
 # arch-fitness — 架構適應度 Judge/evals 標準（確定性，消弭模型-代碼縫隙）
 
 > 沙盒接口契約文件：本 SKILL.md 是這個沙盒的接口契約，受沙盒的驗證 gate 機械驗
-> （`sandboxes/` 非 skill root，故不被動載入；直接以下方 `arch_fitness_kernel.py` 調用）。
+> （`sandboxes/` 非 skill root，故不被動載入；可調用入口 = [`.claude/commands/arch-fitness.md`](../../.claude/commands/arch-fitness.md)，或直接跑下方 `arch_fitness_kernel.py`）。
 > 分工原則：本沙盒**只量測 + surface + 當 loop 的 Judge/evals 標準**；改不改代碼是人 / loop 的決定（report-only，不自動接受結果）。
 
 ## 啟動前置（C5 / fail-loud — 前置不滿足顯式錯誤，禁靜默偽完成）

@@ -39,9 +39,9 @@
  embedded-vec DR ──▶  turbovec               ───▶  /turbovec                 [LIVE]
  user protocol  ───▶  self-correcting-loop   ───▶  /self-correcting-loop     [LIVE]
  sandcastle orch ─▶  sandcastle-orchestration ──▶  /sandcastle-orchestration [LIVE*]
- arch DR        ───▶  arch-fitness           ───▶  (run kernel directly)     [LIVE]
- capacity DR    ───▶  capacity-estimation    ───▶  (run kernel directly)     [LIVE]
- fullstack DR   ───▶  fullstack-design-judge ───▶  (run selftest directly)   [LIVE]
+ arch DR        ───▶  arch-fitness           ───▶  /arch-fitness             [LIVE]
+ capacity DR    ───▶  capacity-estimation    ───▶  /capacity-estimation      [LIVE]
+ fullstack DR   ───▶  fullstack-design-judge ───▶  /fullstack-design-judge   [LIVE]
 
  *Path B (deterministic observation-record projection) is LIVE on python3 alone;
   Path A (the probabilistic RIP run) additionally needs Docker + Node + a Claude OAuth token.
@@ -79,9 +79,9 @@
 | `turbovec` | air-gapped 本地向量檢索——index+self-query 全在 containment 內（count_metric==0 = 不出機器；composes openshell-containment） | `/turbovec` | ✅ 5 passed | 上者 + staged wheels |
 | `self-correcting-loop` | PLAN/DO/VERIFY/DECIDE 的確定性 DECIDE 閘——∀criterion ≥ threshold → FINAL，否則 ITERATING + 最弱項；有界 no-progress / exhaustion 守衛；零 LLM-judge；支援 `kind:runnable`(exit-code) 與 `kind:rubric`(LLM 分) 混用 | `/self-correcting-loop` | ✅ 37 passed + selftest | 無（live 也只需 python3） |
 | `sandcastle-orchestration` | 真跑 @ai-hero/sandcastle 可行組合（head-run 容器隔離 agent + 主機端 plain git = merge-back OUTCOME + 主機端 exec-gate）對 fixture/throwaway repo，確定性投影成 observation-record | `/sandcastle-orchestration` | ✅ 42 passed + selftest 7/7 | Path A RIP run 另需 Docker + Node + Claude OAuth token（Path B 投影只需 python3） |
-| `arch-fitness` | 確定性架構適應度 Judge/evals 標準——量 CODE vs arch-model spec → Clean-Arch 分層 + module-boundary 違規 + Martin I/A/D 耦合 + AST 壞味道；PASS iff 0 hard 違規，focus = 最弱維；當 self-correcting-loop 的 VERIFY/Judge（report-only，不改代碼/不自動接受） | —（直接跑 kernel） | ✅ 27 passed + selftest 13/13 | 無（live 也只需 python3） |
-| `capacity-estimation` | 確定性 AI-Agent 容量估算器 + 可行性 rubric judge——5 DR 指標（Agent QPS / token TPS / VRAM=權重+KV / 前綴快取 breakeven / RAG RAM）；FEASIBLE iff 每條 budgeted criterion 在預算內，否則 INFEASIBLE + 綁定約束 + 宏觀/微觀槓桿；投影成 self-correcting-loop runnable scorecard | —（直接跑 kernel） | ✅ 50 passed + selftest 20/20 | 無（live 也只需 python3） |
-| `fullstack-design-judge` | DR 蒸餾的設計 Judge rubric（10 宏觀架構 + 11 微觀代碼軸，runnable/rubric kind 切分）判分散式 FE/BE + BFF + agent 異步系統；DECIDE 復用 self-correcting-loop kernel（CONSUMED:self-correcting-loop 機械驗）；引導宏觀設計→微觀代碼 | —（直接跑 selftest） | ✅ selftest 7/7（composes loop kernel） | 無（live 也只需 python3） |
+| `arch-fitness` | 確定性架構適應度 Judge/evals 標準——量 CODE vs arch-model spec → Clean-Arch 分層 + module-boundary 違規 + Martin I/A/D 耦合 + AST 壞味道；PASS iff 0 hard 違規，focus = 最弱維；當 self-correcting-loop 的 VERIFY/Judge（report-only，不改代碼/不自動接受） | `/arch-fitness` | ✅ 27 passed + selftest 13/13 | 無（live 也只需 python3） |
+| `capacity-estimation` | 確定性 AI-Agent 容量估算器 + 可行性 rubric judge——5 DR 指標（Agent QPS / token TPS / VRAM=權重+KV / 前綴快取 breakeven / RAG RAM）；FEASIBLE iff 每條 budgeted criterion 在預算內，否則 INFEASIBLE + 綁定約束 + 宏觀/微觀槓桿；投影成 self-correcting-loop runnable scorecard | `/capacity-estimation` | ✅ 50 passed + selftest 20/20 | 無（live 也只需 python3） |
+| `fullstack-design-judge` | DR 蒸餾的設計 Judge rubric（10 宏觀架構 + 11 微觀代碼軸，runnable/rubric kind 切分）判分散式 FE/BE + BFF + agent 異步系統；DECIDE 復用 self-correcting-loop kernel（CONSUMED:self-correcting-loop 機械驗）；引導宏觀設計→微觀代碼 | `/fullstack-design-judge` | ✅ selftest 7/7（composes loop kernel） | 無（live 也只需 python3） |
 
 全景圖（機械可驗的 wiring 真相）：[`sandboxes/PANORAMA.md`](sandboxes/PANORAMA.md)。
 

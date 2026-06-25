@@ -80,7 +80,7 @@
 
 源 DR：[`軟體架構的戰略與戰術雙重奏…系統性研究.md`](<軟體架構的戰略與戰術雙重奏：從領域邊界劃分到代碼演進治理的系統性研究.md>)
 · 落地產物：[`sandboxes/arch-fitness/RUN.md`](../sandboxes/arch-fitness/RUN.md)
-· 入口：直接跑 `sandboxes/arch-fitness/src/arch_fitness_kernel.py`（DOC-ONLY，尚無 `/command`）
+· 入口：[`/arch-fitness`](../.claude/commands/arch-fitness.md)（或直接跑 `sandboxes/arch-fitness/src/arch_fitness_kernel.py`）
 
 ### ✅ 跑 `arch_fitness_kernel.py measure` 即真實達成/復現
 
@@ -107,7 +107,7 @@
 
 源 DR：[`AI Agent 時代的計算系統容量估算與架構設計研究報告.md`](<AI Agent 時代的計算系統容量估算與架構設計研究報告.md>)
 · 落地產物：[`sandboxes/capacity-estimation/RUN.md`](../sandboxes/capacity-estimation/RUN.md)
-· 入口：直接跑 `sandboxes/capacity-estimation/src/capacity_kernel.py`（DOC-ONLY）
+· 入口：[`/capacity-estimation`](../.claude/commands/capacity-estimation.md)（或直接跑 `sandboxes/capacity-estimation/src/capacity_kernel.py`）
 
 ### ✅ 跑 `capacity_kernel.py estimate/judge` 即真實復現
 
@@ -134,7 +134,7 @@
 
 源 DR：[`現代分散式系統架構下前後端需求拆分、BFF 模式演進與 AI Agent 異步任務調度之深度技術研究報告.md`](<現代分散式系統架構下前後端需求拆分、BFF 模式演進與 AI Agent 異步任務調度之深度技術研究報告.md>)
 · 落地產物：[`sandboxes/fullstack-design-judge/RUN.md`](../sandboxes/fullstack-design-judge/RUN.md)
-· 入口：直接跑 `sandboxes/fullstack-design-judge/src/judge_selftest.py`（DOC-ONLY，composes self-correcting-loop）
+· 入口：[`/fullstack-design-judge`](../.claude/commands/fullstack-design-judge.md)（或直接跑 `sandboxes/fullstack-design-judge/src/judge_selftest.py`；composes self-correcting-loop）
 
 ### ✅ 跑 `judge_selftest.py` 即真實復現
 
