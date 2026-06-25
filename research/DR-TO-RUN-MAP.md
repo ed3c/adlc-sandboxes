@@ -76,6 +76,33 @@
 
 ---
 
+## arch-fitness ← 軟體架構戰略/戰術 DR
+
+源 DR：[`軟體架構的戰略與戰術雙重奏…系統性研究.md`](<軟體架構的戰略與戰術雙重奏：從領域邊界劃分到代碼演進治理的系統性研究.md>)
+· 落地產物：[`sandboxes/arch-fitness/RUN.md`](../sandboxes/arch-fitness/RUN.md)
+· 入口：直接跑 `sandboxes/arch-fitness/src/arch_fitness_kernel.py`（DOC-ONLY，尚無 `/command`）
+
+### ✅ 跑 `arch_fitness_kernel.py measure` 即真實達成/復現
+
+| DR 章節 | DR 原文敘述 | RUN.md 跑出的證據 |
+|---|---|---|
+| **戰略：領域邊界 / 分層** | 「Clean Architecture 分層依賴規則——內層不得依賴外層；模組化單體的 module-boundary 白名單」 | `measure` 對 sample_project → `verdict=FAIL`、`layer_violations`（controllers→persistence）+ `boundary_violations`（controllers↑persistence、workflow↑controllers），確定性、含 file:lineno |
+| **戰略：耦合度量（Martin metrics）** | 「以 Instability(I) / Abstractness(A) / Distance(D) 量耦合，標出 Zone of Pain」 | report 的 `coupling` 段印每元件 ca/ce/I/A/D；Zone-of-Pain **surfaced 非 gated**（誠實邊界） |
+| **戰術：代碼演進壞味道** | 「Long Method / Too Many Parameters / Large Class 等可 AST 量測的壞味道」 | selftest `long_method_detected` / `too_many_params_detected` / `large_class_detected` 全 PASS（AST 量測） |
+| **作為 evals 標準導引迴圈** | 「fitness function 應持續量測架構是否隨演進腐化，導引修復」 | `rubric`（三軸）+ `scorecard` 投影成 `self-correcting-loop` 可消費的 runnable scorecard；`focus`=最弱維導下一輪 |
+
+### ⚠ 只落地「結構量測」那塊（誠實邊界）
+
+- arch-fitness 量的是**結構**（layer/boundary/coupling + AST 壞味道）；DR 講的「代碼演進**治理**」更大（重構排程、團隊流程、遷移策略）——`/command` 不驗證那些。
+- 3 個 `semantic` 維度（module_depth / self-documenting / errors-out-of-existence）**非機器可量**——留在 loop 的 LLM-VERIFY，非 kernel 裁（anti placebo-fitness）。
+
+### ❌ DR 講了但 `arch_fitness_kernel.py` 不驗證
+
+- **DDD 戰略設計**（bounded context 劃分、context map、ubiquitous language）— 範圍外，沙盒不替你劃領域。
+- **重構迴圈的執行**（per-function 機械重構）= 另一軸（`/refactor-loop`），arch-fitness 只 DIRECT（指 WHERE），不 wire HOW。
+
+---
+
 ## self-correcting-loop — 無 DR
 
 `self-correcting-loop` **不源自 DR**，而是源自使用者直接給的 PLAN/DO/VERIFY/DECIDE 迴圈協定，故不在本對應圖內。

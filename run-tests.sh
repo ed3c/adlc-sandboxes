@@ -25,6 +25,8 @@ run "openshell-containment · pytest"  python3 -m pytest -q sandboxes/openshell-
 run "turbovec · pytest"               python3 -m pytest -q sandboxes/turbovec/tests/
 run "sandcastle-orchestration · selftest" bash -c 'cd "'"$ROOT"'/sandboxes/sandcastle-orchestration" && python3 src/boundary_adapter.py selftest --iso 2026-06-24'
 run "sandcastle-orchestration · pytest"   python3 -m pytest -q sandboxes/sandcastle-orchestration/tests/
+run "arch-fitness · selftest" bash -c 'cd "'"$ROOT"'/sandboxes/arch-fitness" && python3 src/arch_fitness_kernel.py selftest --iso 2026-06-24'
+run "arch-fitness · pytest"   python3 -m pytest -q sandboxes/arch-fitness/tests/
 
 if [ "$fail" -eq 0 ]; then echo "ALL GREEN ✅"; else echo "SOME FAILED ❌"; fi
 exit "$fail"

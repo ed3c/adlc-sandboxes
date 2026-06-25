@@ -1,0 +1,15 @@
+# Arch-model spec for the clean_project fixture — code conforms, so the kernel must return PASS (0 hard violations).
+root: app
+components:
+  api: app.api
+  core: app.core
+layer_rules:
+  - {from: core, must_not_access: api}     # core (inner) must not depend on api (outer)
+allowed_dependencies:
+  api: [core]
+  core: []
+thresholds:
+  max_method_loc: 10
+  max_params: 5
+  max_class_methods: 5
+  max_distance: 0.5

@@ -1,0 +1,29 @@
+# sandboxes/arch-fitness/tests/qa.golden.yaml — the sandbox gate qa tier fixture.
+# BOW-cosine (deterministic, no Ollama) scores each query against THIS sandbox's SKILL.md routing surface;
+# actual = trigger if cosine > min_score else no_trigger. regression green iff every actual == expected_current
+# (the issue behavioral-golden). expected_current = MEASURED baseline (filled after a real qa run, never predicted).
+schema: sandbox-qa-golden/v1
+min_score: 0.05
+cases:
+  # should-trigger: queries sharing real tokens with the arch-fitness routing surface
+  - id: QA-01
+    query: "measure architecture fitness: layer-dependency and module-boundary violations against a model spec"
+    ground_truth: trigger
+    expected_current: trigger
+  - id: QA-02
+    query: "detect architecture erosion / the model-code gap with a deterministic fitness function gate"
+    ground_truth: trigger
+    expected_current: trigger
+  - id: QA-03
+    query: "architecture-erosion model-code-gap fitness-function 量測 layer-dependency module-boundary 違規"
+    ground_truth: trigger
+    expected_current: trigger
+  # should-not-trigger: distant-domain queries that must route to NEIGHBOR sandboxes, not here
+  - id: QA-04
+    query: "launch the openshell containment sandbox with default-deny egress isolation"
+    ground_truth: no_trigger
+    expected_current: no_trigger
+  - id: QA-05
+    query: "index documents into the local vector store for air-gapped retrieval"
+    ground_truth: no_trigger
+    expected_current: no_trigger

@@ -1,0 +1,21 @@
+# Architecture-model spec for the bundled sample_project fixture.
+# This declares the MODEL; the kernel measures the CODE; divergence = the "model-code gap" (DR §自動化架構驗證).
+root: app
+components:                      # named architectural component → its package prefix (layer OR module — same primitive)
+  controllers: app.controllers
+  workflow: app.workflow
+  persistence: app.persistence
+  domain: app.domain
+layer_rules:                     # Clean Architecture dependency rule — these directed accesses are FORBIDDEN
+  - {from: controllers, must_not_access: persistence}   # presentation must not skip the workflow layer
+  - {from: persistence, must_not_access: workflow}       # no reverse (inner→outer) dependency
+allowed_dependencies:            # Modular-monolith / Spring-Modulith whitelist — a component may import ONLY these (+ itself)
+  controllers: [workflow, domain]
+  workflow: [persistence, domain]
+  persistence: [domain]
+  domain: []
+thresholds:
+  max_method_loc: 10             # Long Method (APoSD/Clean Code; physical line span)
+  max_params: 5                  # Too Many Parameters (shallow-interface signal)
+  max_class_methods: 5           # Large Class (SRP violation signal)
+  max_distance: 0.5              # Distance from the Main Sequence (Zone of Pain / Uselessness threshold)

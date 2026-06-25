@@ -1,0 +1,15 @@
+# sandboxes/arch-fitness/manifest.yaml — machine-parsable interface declaration.
+# the sandbox gate parses exposed_capabilities + launch + runtime_trace_cmd + qa_fixture.
+name: arch-fitness                           # == dir == SKILL.md frontmatter name
+exposed_capabilities:
+  - "deterministic architecture-fitness measurement: a target source tree (CODE) vs an arch-model spec (MODEL) → Clean-Arch layer-dependency violations + modular-monolith module-boundary breaches + Martin I/A/D coupling (Zone-of-Pain) + AST code smells (Long Method / Too Many Params / Large Class); verdict PASS iff 0 hard violations (zero LLM-judge)"
+  - "a complete-concept Judge/evals STANDARD (rubric): a macro/micro/governance concept space, honestly typed deterministic|semantic|governance, that loop-engineering (/self-correcting-loop · /autoresearch) consumes to guide both macro architecture and micro code — the kernel measures the deterministic subset; semantic concepts stay LLM-scored in the loop's VERIFY"
+launch:
+  command: /arch-fitness
+  triggers: [arch-fitness, 架構適應度, architecture-erosion, model-code-gap, layer-dependency, fitness-function]
+  precondition: "!`python3 --version`"        # python present → exit 0; else fail-loud (no fake verdict)
+src_entry: src/arch_fitness_kernel.py
+# runtime tier runs this with cwd=sandbox dir. selftest measures the bundled sample(FAIL)/clean(PASS)
+# fixtures and asserts every dimension is detected correctly, exiting 0 iff the kernel discriminates.
+runtime_trace_cmd: "python3 src/arch_fitness_kernel.py selftest --iso 2026-06-24"
+qa_fixture: tests/qa.golden.yaml

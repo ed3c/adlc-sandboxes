@@ -1,0 +1,10 @@
+[
+  {"id": "layer_dependency", "kind": "runnable", "description": "Clean-Arch layer-dependency rule — 0 forbidden cross-layer accesses (arch-fitness HARD)"},
+  {"id": "module_boundary", "kind": "runnable", "description": "modular-monolith allowed-deps whitelist — 0 boundary breaches (arch-fitness HARD)"},
+  {"id": "long_method", "kind": "runnable", "description": "0 functions over max_method_loc (arch-fitness smell)"},
+  {"id": "too_many_params", "kind": "runnable", "description": "0 functions over max_params (arch-fitness smell)"},
+  {"id": "large_class", "kind": "runnable", "description": "0 classes over max_class_methods (arch-fitness smell)"},
+  {"id": "module_depth", "kind": "rubric", "threshold": 8, "description": "APoSD deep-module: narrow interface over a strong implementation (SEMANTIC — LLM scores 1-10 in VERIFY)"},
+  {"id": "self_documenting_vs_comments", "kind": "rubric", "threshold": 8, "description": "comments capture the why/contract that names cannot (SEMANTIC — LLM scores 1-10 in VERIFY)"},
+  {"id": "define_errors_out_of_existence", "kind": "rubric", "threshold": 8, "description": "interface semantics absorb edge cases instead of throwing (SEMANTIC — LLM scores 1-10 in VERIFY)"}
+]

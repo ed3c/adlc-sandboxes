@@ -3,8 +3,8 @@
 > 「全景圖」義：列所有沙盒 + 暴露能力 + 啟動方式 + wiring 狀態。**機器可解**（下方每個 ```yaml sandbox```
 > block 都可程式解析），人讀的 markdown 表只給人看。存在 ≠ 接線——以 `wiring` 狀態為準。
 >
-> 本 repo 有 **3 個真實沙盒**——`openshell-containment` / `turbovec` / `self-correcting-loop`。下方標
-> `(example — not a real sandbox)` 的 block 是 schema 示範。
+> 本 repo 有 **5 個真實沙盒**——`openshell-containment` / `turbovec` / `self-correcting-loop` /
+> `sandcastle-orchestration` / `arch-fitness`。下方標 `(example — not a real sandbox)` 的 block 是 schema 示範。
 
 ## 人讀層（markdown 表）
 
@@ -14,6 +14,7 @@
 | turbovec | air-gapped local vector search — index+self-query INSIDE ns-sandbox (count_metric==0) | /turbovec | LIVE |
 | self-correcting-loop | deterministic DECIDE gate for a PLAN/DO/VERIFY/DECIDE loop — FINAL iff ∀criterion ≥ threshold, else ITERATING + weakest focus; bounded no-progress/exhaustion guard | /self-correcting-loop | LIVE |
 | sandcastle-orchestration | run sandcastle's working composition (head-run container-isolated agent + host-git branch/commit = merge-back outcome + host exec-gate) against a fixture/throwaway repo, project to a deterministic observation-record | /sandcastle-orchestration | LIVE |
+| arch-fitness | deterministic architecture-fitness Judge/evals standard — measure CODE vs an arch-model spec → Clean-Arch layer + module-boundary violations + Martin I/A/D coupling + AST smells; PASS iff 0 hard violations; AS the VERIFY/Judge for a self-correcting loop | — (direct: kernel) | LIVE |
 
 ## 機器層（每沙盒一 block）
 
@@ -71,4 +72,13 @@ command: /sandcastle-orchestration
 triggers: [sandcastle, container-isolated agent orchestration, 招牌組合, agent-orchestration RIP study vehicle, exec-gate, observation-record, sandcastle-orchestration]
 launch_precondition: "!`timeout 5 docker info --format '{{.ServerVersion}}' 2>&1 | head -1 || echo '[docker-down]'`"
 wiring: LIVE   # static + qa 6/6 + runtime boundary_adapter selftest exit 0 (Path B deterministic projection, runtime-proven). Path A (the probabilistic RIP run) additionally needs Docker + Node + a Claude OAuth token — see RUN.md honest boundary.
+```
+
+```yaml sandbox
+name: arch-fitness
+exposed_capability: "deterministic architecture-fitness Judge/evals standard — measure a target source tree (CODE) vs a declared arch-model spec (MODEL): Clean-Arch layer-dependency violations + modular-monolith module-boundary breaches + Martin I/A/D coupling (Zone-of-Pain, surfaced-not-gated) + AST code smells (Long Method/Too Many Params/Large Class). verdict PASS iff 0 hard violations; focus = weakest dim. Report-only — never edits the target, never auto-accepts. AS the VERIFY/Judge for a self-correcting loop (loop owns DO+DECIDE); composes the existing loop layer, no new engine."
+command: none   # DOC-ONLY entry — run src/arch_fitness_kernel.py directly (selftest/measure/rubric/scorecard); a /command may be added later (as turbovec was)
+triggers: [arch-fitness, 架構適應度, architecture-erosion, model-code-gap, layer-dependency, fitness-function]
+launch_precondition: "!`python3 --version`"
+wiring: LIVE   # static + qa 27/27 + runtime selftest exit 0 (13 dims discriminated, sample→FAIL/clean→PASS). runtime-proven.
 ```
