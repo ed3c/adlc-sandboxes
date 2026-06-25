@@ -8,7 +8,8 @@ bounded-loop guard (no-progress plateau / exhaustion) is exercised.
 
 Related docs:
 - Implementation: sandboxes/self-correcting-loop/src/loop_kernel.py
-- Interface contract: sandboxes/self-correcting-loop/SKILL.md
+- Interface contract: sandboxes/self-correcting-loop/SKILL.md (C1-C5)
+- Loop governance: .claude/skills/adlc/skill.md S1/S3
 """
 import sys
 from pathlib import Path
@@ -62,8 +63,9 @@ def test_focus_tie_breaks_on_rubric_declared_order():
 def test_per_criterion_records_pass_flags():
     r = _rubric(("a", 8), ("b", 6))
     d = lk.decide(r, {"a": 7, "b": 6})
-    assert d.per_criterion["a"] == {"score": 7, "threshold": 8, "pass": False}
-    assert d.per_criterion["b"] == {"score": 6, "threshold": 6, "pass": True}
+    # rubric criteria carry kind="rubric" (the additive D3 field); scores/thresholds/pass unchanged
+    assert d.per_criterion["a"] == {"score": 7, "threshold": 8, "pass": False, "kind": "rubric"}
+    assert d.per_criterion["b"] == {"score": 6, "threshold": 6, "pass": True, "kind": "rubric"}
 
 
 def test_decide_is_pure_same_inputs_same_decision():
@@ -177,7 +179,111 @@ def test_detect_no_progress_false_below_window():
     assert lk._detect_no_progress([{"min_score": 5}], window=3) is False
 
 
-# ── CLI selftest = the runtime_trace_cmd the fold-in gate runs ────────────────
+# ── runnable criteria (D3: pass/fail = command EXIT CODE, not an LLM rubric score) ─────
+# A `kind: runnable` criterion's scorecard value is a real command exit code (VERIFY runs the
+# command). Kernel: runnable-pass = (exit_code == 0). Orthogonal to rubric criteria; both kinds
+# coexist in ONE decide(). effective_score unifies ordering: runnable → SCORE_MAX if pass else 0.
+
+def _mixed_rubric(*specs):
+    """Build a mixed rubric from (id, kind, threshold) triples; threshold ignored for runnable."""
+    out = []
+    for cid, kind, thr in specs:
+        c = {"id": cid, "kind": kind}
+        if kind == "rubric":
+            c["threshold"] = thr
+        out.append(c)
+    return lk.load_rubric(out)
+
+
+def test_runnable_criterion_passes_on_exit_zero():
+    r = _mixed_rubric(("tests", "runnable", None))
+    d = lk.decide(r, {"tests": 0})
+    assert d.verdict == "FINAL"
+    assert d.focus is None
+    assert d.per_criterion["tests"]["pass"] is True
+    assert d.per_criterion["tests"]["kind"] == "runnable"
+    assert d.per_criterion["tests"]["threshold"] == "runnable"   # threshold irrelevant for runnable
+
+
+def test_runnable_plus_rubric_final_iff_all_pass():
+    r = _mixed_rubric(("tests", "runnable", None), ("readability", "rubric", 8))
+    assert lk.decide(r, {"tests": 0, "readability": 8}).verdict == "FINAL"
+    # runnable still green but rubric below threshold → not FINAL
+    assert lk.decide(r, {"tests": 0, "readability": 5}).verdict == "ITERATING"
+
+
+# REVERSE-MUTANT GUARD: a kernel that ignores the exit code (always-passes runnable) would
+# mark this FINAL with focus=None. The exit-1 → ITERATING + focus==runnable assertion is the
+# discriminator that catches such a mutant.
+def test_runnable_criterion_fails_on_nonzero_exit():
+    r = _mixed_rubric(("tests", "runnable", None))
+    d = lk.decide(r, {"tests": 1})
+    assert d.verdict == "ITERATING"          # ← reverse-mutant discriminator
+    assert d.focus == "tests"
+    assert d.failing == ["tests"]
+    assert d.per_criterion["tests"]["pass"] is False
+    assert d.min_score == 0                  # failing runnable pins min_score at 0 (no-progress source)
+
+
+def test_failing_runnable_focuses_before_low_rubric_score():
+    # mixed: a failing test (hard blocker, effective 0) must focus BEFORE a low rubric score (3)
+    r = _mixed_rubric(("tests", "runnable", None), ("readability", "rubric", 8))
+    d = lk.decide(r, {"tests": 1, "readability": 3})
+    assert d.verdict == "ITERATING"
+    assert d.focus == "tests"                # effective 0 < effective 3 → runnable focuses first
+    assert d.failing == ["tests", "readability"]
+
+
+def test_passing_runnable_effective_score_does_not_pin_min():
+    # a passing runnable contributes SCORE_MAX to effective ordering, so min_score reflects the rubric
+    r = _mixed_rubric(("tests", "runnable", None), ("readability", "rubric", 8))
+    d = lk.decide(r, {"tests": 0, "readability": 6})
+    assert d.min_score == 6                  # passing runnable (effective 10) does not drag min below rubric
+
+
+def test_runnable_higher_exit_code_still_just_fails():
+    r = _mixed_rubric(("tests", "runnable", None))
+    d = lk.decide(r, {"tests": 137})         # any non-zero exit = fail (exit code value is not a score)
+    assert d.verdict == "ITERATING"
+    assert d.focus == "tests"
+
+
+# ── runnable fail-loud: exit code must be a non-negative int, never a rubric-style 1-10 ─────
+
+def test_runnable_negative_exit_fails_loud():
+    r = _mixed_rubric(("tests", "runnable", None))
+    with pytest.raises(lk.RubricError):
+        lk.validate_scorecard(r, {"tests": -1})
+
+
+def test_runnable_bool_exit_fails_loud():
+    r = _mixed_rubric(("tests", "runnable", None))
+    with pytest.raises(lk.RubricError):
+        lk.validate_scorecard(r, {"tests": True})   # True == 1 in python — must NOT be accepted
+
+
+def test_runnable_non_int_exit_fails_loud():
+    r = _mixed_rubric(("tests", "runnable", None))
+    with pytest.raises(lk.RubricError):
+        lk.validate_scorecard(r, {"tests": "x"})
+
+
+def test_runnable_large_exit_code_accepted():
+    r = _mixed_rubric(("tests", "runnable", None))
+    lk.validate_scorecard(r, {"tests": 255})         # any non-negative int is a legal exit code
+
+
+def test_unknown_kind_fails_loud():
+    with pytest.raises(lk.RubricError, match="kind"):
+        lk.load_rubric([{"id": "a", "kind": "magic"}])
+
+
+def test_kind_defaults_to_rubric_back_compat():
+    r = lk.load_rubric([{"id": "a", "threshold": 8}])   # no kind key
+    assert r[0].kind == "rubric"
+
+
+# ── CLI selftest = the runtime_trace_cmd the absorb gate runs ────────────────
 
 def test_selftest_exits_zero(tmp_path, capsys):
     # selftest writes a trace under ../trace; run it and assert green exit

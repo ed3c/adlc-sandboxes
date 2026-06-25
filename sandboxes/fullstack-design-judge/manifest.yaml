@@ -1,0 +1,17 @@
+# sandboxes/fullstack-design-judge/manifest.yaml — machine-parsable interface declaration.
+# the sandbox gate static tier parses exposed_capabilities + requires + launch + runtime_trace_cmd + qa_fixture.
+name: fullstack-design-judge                 # == dir == SKILL.md frontmatter name == /command
+exposed_capabilities:
+  - "judge a distributed frontend/backend + BFF + AI-agent-async system DESIGN or CODE against the DR-distilled fullstack-design rubric (10 axes x macro/micro), guiding 宏觀系統架構 down to 微觀代碼實現; DECIDE delegated to the self-correcting-loop kernel (FINAL iff every criterion >= threshold, deterministic (no LLM-judge) zero LLM-judge)"
+  - "two-tier rubric set (macro architecture / micro code; runnable+rubric kinds) usable as a loop-engineering Judge/evals standard for a self-correcting design-refinement loop"
+requires:
+  - self-correcting-loop                     # composes its DECIDE kernel (ADR-0009 composition tier; CONSUMED marker proven in runtime trace)
+launch:
+  command: /fullstack-design-judge
+  triggers: [fullstack-design-judge, 分散式設計評判, BFF設計評判, 前後端架構評判, 系統設計rubric, design-judge]
+  precondition: "!`python3 --version`"       # python present -> exit 0; else fail-loud
+src_entry: src/judge_selftest.py             # runnable entry that exercises the rubric against the composed kernel
+# runtime tier runs this (cwd=sandbox dir): asserts each rubric is well-formed + judged correctly by the
+# kernel, prints CONSUMED:self-correcting-loop for the composition tier. exit 0 iff all checks green. Deterministic.
+runtime_trace_cmd: "python3 src/judge_selftest.py --iso 2026-06-24"
+qa_fixture: tests/qa.golden.yaml

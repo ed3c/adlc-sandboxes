@@ -1,0 +1,17 @@
+# sandboxes/capacity-estimation/manifest.yaml — machine-parsable interface declaration.
+# the sandbox gate static tier parses exposed_capabilities + launch + runtime_trace_cmd + qa_fixture.
+name: capacity-estimation                    # == dir == SKILL.md frontmatter name == /command
+exposed_capabilities:
+  - "deterministic AI-Agent capacity ESTIMATOR encoding the DR's 5 core formulas: Agent QPS = User QPS × N_loops; Input/Output TPS; static weight VRAM = params × precision; KV-cache = (2·L·H_kv·D_head·S·B·Prec)/TP; RAG RAM = N·d·bytes·α_HNSW (exact in bytes, GiB+GB both, deterministic (no LLM-judge) zero LLM-judge)"
+  - "feasibility RUBRIC JUDGE: FEASIBLE iff every budgeted criterion within budget, else INFEASIBLE + binding constraint + the DR's macro architecture lever (GPU count / tensor-parallel / vector-DB RAM) AND micro code lever (PagedAttention / FP8 KV / RadixAttention / SQ8 / DiskANN). judge exits 0/3 so it composes as a self-correcting-loop runnable criterion (no new engine)"
+  - "turnkey loop-engineering composition (fleet-parity with arch-fitness): `scorecard` CLI projects the 5 DR-step criteria to a loop_kernel-compatible runnable scorecard (keys==rubric ids) for multi-criterion DECIDE by /self-correcting-loop; recipes/ ships the rubric + PLAN/DO/VERIFY/DECIDE recipe. DECIDE stays loop_kernel's — this kernel only measures + projects"
+launch:
+  command: /capacity-estimation
+  triggers: [capacity-estimation, 容量估算, agent-capacity, vram-sizing, kv-cache, token-throughput, gpu-sizing, capacity-feasibility, 代理放大係數, 架構檢核表]
+  precondition: "!`python3 --version`"        # pure-python kernel; python present → exit 0, else fail-loud (no fake estimate)
+src_entry: src/capacity_kernel.py
+# runtime tier runs this with cwd=sandbox. selftest reproduces the DR worked example (40 QPS / 327680 B
+# KV/token / 140GB weights / 184.32GB RAG) AND asserts the judge discriminates (cards 3→2 flips INFEASIBLE,
+# binding=vram with PagedAttention lever; prefix hit<breakeven binds). Deterministic, exit 0 iff correct.
+runtime_trace_cmd: "python3 src/capacity_kernel.py selftest --iso 2026-06-24"
+qa_fixture: tests/qa.golden.yaml

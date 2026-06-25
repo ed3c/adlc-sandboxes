@@ -1,0 +1,7 @@
+{
+  "_provenance": "D3 absorb (, absorbed from the sandcastle-orchestration sandbox surface): a mixed rubric proving runnable ⊥ rubric. `tests` is a runnable criterion (its scorecard value is a command EXIT CODE reported by VERIFY; pass = exit 0, zero-LLM). `readability` is a normal LLM-scored rubric criterion. Both coexist in one decide().",
+  "criteria": [
+    {"id": "tests", "kind": "runnable", "description": "the artifact's test suite passes — VERIFY runs the command and reports its exit code (0 = pass)"},
+    {"id": "readability", "kind": "rubric", "threshold": 8, "description": "reads well — LLM-scored 1-10 semantic 'good enough'"}
+  ]
+}

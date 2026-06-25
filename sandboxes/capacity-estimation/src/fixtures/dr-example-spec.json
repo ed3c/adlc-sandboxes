@@ -1,0 +1,29 @@
+{
+  "label": "dr-worked-example (自動化數據分析 Agent, Llama-3-70B)",
+  "_provenance": "AI Agent 時代的計算系統容量估算與架構設計研究報告 §2 + §5 worked example",
+  "workload": {
+    "user_qps": 10,
+    "n_loops": 4,
+    "avg_input_tokens": 3000,
+    "avg_output_tokens": 500
+  },
+  "model": {
+    "params_billions": 70,
+    "precision_bytes": 2,
+    "layers": 80,
+    "kv_heads": 8,
+    "head_dim": 128
+  },
+  "serving": {
+    "context_length": 4096,
+    "batch_size": 32,
+    "tensor_parallel": 1,
+    "card_vram_gb": 80
+  },
+  "rag": {
+    "chunks": 10000000,
+    "dim": 3072,
+    "precision_bytes": 4,
+    "hnsw_alpha": 1.5
+  }
+}

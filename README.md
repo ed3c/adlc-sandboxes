@@ -2,10 +2,10 @@
 
 # adlc-sandboxes
 
-**Five small, self-contained sandboxes — each turns one external idea into a runnable, deterministically-verified capability you can invoke as a Claude Code `/command`.**
+**Seven small, self-contained sandboxes — each turns one external idea into a runnable, deterministically-verified capability you can invoke as a Claude Code `/command`.**
 
-![sandboxes](https://img.shields.io/badge/sandboxes-5-blue)
-![tests](https://img.shields.io/badge/tests-107_passing-brightgreen)
+![sandboxes](https://img.shields.io/badge/sandboxes-7-blue)
+![tests](https://img.shields.io/badge/tests-169_passing-brightgreen)
 ![runtime](https://img.shields.io/badge/runtime-python3-blue)
 ![API keys](https://img.shields.io/badge/API_keys-zero-success)
 ![status](https://img.shields.io/badge/status-showcase-lightgrey)
@@ -40,6 +40,8 @@
  user protocol  ───▶  self-correcting-loop   ───▶  /self-correcting-loop     [LIVE]
  sandcastle orch ─▶  sandcastle-orchestration ──▶  /sandcastle-orchestration [LIVE*]
  arch DR        ───▶  arch-fitness           ───▶  (run kernel directly)     [LIVE]
+ capacity DR    ───▶  capacity-estimation    ───▶  (run kernel directly)     [LIVE]
+ fullstack DR   ───▶  fullstack-design-judge ───▶  (run selftest directly)   [LIVE]
 
  *Path B (deterministic observation-record projection) is LIVE on python3 alone;
   Path A (the probabilistic RIP run) additionally needs Docker + Node + a Claude OAuth token.
@@ -69,15 +71,17 @@
 
 ## Sandboxes
 
-**沙盒一覽（5 個全完成單元）**
+**沙盒一覽（7 個全完成單元）**
 
 | 沙盒 | 暴露能力 | `/command` | 一鍵跑綠 | live 能力另需 |
 |------|---------|-----------|----------|-------------|
 | `openshell-containment` | OpenShell default-deny egress + fs 隔離下的 enforced-containment 執行 + 對抗式 containment_probe（count_metric==0 = 完全 contained） | `/openshell-containment` · `/sandbox-openshell` | ✅ 8 passed | OpenShell + Docker |
 | `turbovec` | air-gapped 本地向量檢索——index+self-query 全在 containment 內（count_metric==0 = 不出機器；composes openshell-containment） | `/turbovec` | ✅ 5 passed | 上者 + staged wheels |
-| `self-correcting-loop` | PLAN/DO/VERIFY/DECIDE 的確定性 DECIDE 閘——∀criterion ≥ threshold → FINAL，否則 ITERATING + 最弱項；有界 no-progress / exhaustion 守衛；零 LLM-judge | `/self-correcting-loop` | ✅ 25 passed + selftest 6/6 | 無（live 也只需 python3） |
+| `self-correcting-loop` | PLAN/DO/VERIFY/DECIDE 的確定性 DECIDE 閘——∀criterion ≥ threshold → FINAL，否則 ITERATING + 最弱項；有界 no-progress / exhaustion 守衛；零 LLM-judge；支援 `kind:runnable`(exit-code) 與 `kind:rubric`(LLM 分) 混用 | `/self-correcting-loop` | ✅ 37 passed + selftest | 無（live 也只需 python3） |
 | `sandcastle-orchestration` | 真跑 @ai-hero/sandcastle 可行組合（head-run 容器隔離 agent + 主機端 plain git = merge-back OUTCOME + 主機端 exec-gate）對 fixture/throwaway repo，確定性投影成 observation-record | `/sandcastle-orchestration` | ✅ 42 passed + selftest 7/7 | Path A RIP run 另需 Docker + Node + Claude OAuth token（Path B 投影只需 python3） |
 | `arch-fitness` | 確定性架構適應度 Judge/evals 標準——量 CODE vs arch-model spec → Clean-Arch 分層 + module-boundary 違規 + Martin I/A/D 耦合 + AST 壞味道；PASS iff 0 hard 違規，focus = 最弱維；當 self-correcting-loop 的 VERIFY/Judge（report-only，不改代碼/不自動接受） | —（直接跑 kernel） | ✅ 27 passed + selftest 13/13 | 無（live 也只需 python3） |
+| `capacity-estimation` | 確定性 AI-Agent 容量估算器 + 可行性 rubric judge——5 DR 指標（Agent QPS / token TPS / VRAM=權重+KV / 前綴快取 breakeven / RAG RAM）；FEASIBLE iff 每條 budgeted criterion 在預算內，否則 INFEASIBLE + 綁定約束 + 宏觀/微觀槓桿；投影成 self-correcting-loop runnable scorecard | —（直接跑 kernel） | ✅ 50 passed + selftest 20/20 | 無（live 也只需 python3） |
+| `fullstack-design-judge` | DR 蒸餾的設計 Judge rubric（10 宏觀架構 + 11 微觀代碼軸，runnable/rubric kind 切分）判分散式 FE/BE + BFF + agent 異步系統；DECIDE 復用 self-correcting-loop kernel（CONSUMED:self-correcting-loop 機械驗）；引導宏觀設計→微觀代碼 | —（直接跑 selftest） | ✅ selftest 7/7（composes loop kernel） | 無（live 也只需 python3） |
 
 全景圖（機械可驗的 wiring 真相）：[`sandboxes/PANORAMA.md`](sandboxes/PANORAMA.md)。
 
@@ -89,10 +93,11 @@
 
 ```bash
 bash run-tests.sh
-# → 5 沙盒的 test 套件 + 3 個 selftest，全綠時 exit 0：
-#   self-correcting-loop · selftest ✅ / pytest 25 ✅ · openshell-containment 8 ✅ · turbovec 5 ✅
+# → 7 沙盒的 test 套件 + 5 個 selftest，全綠時 exit 0：
+#   self-correcting-loop · selftest ✅ / pytest 37 ✅ · openshell-containment 8 ✅ · turbovec 5 ✅
 #   · sandcastle-orchestration · selftest ✅ / pytest 42 ✅ · arch-fitness · selftest ✅ / pytest 27 ✅
-#   → ALL GREEN（107 passing）
+#   · capacity-estimation · selftest ✅ / pytest 50 ✅ · fullstack-design-judge · selftest ✅ (composes loop kernel)
+#   → ALL GREEN（169 passing）
 ```
 
 只需 `python3` + `pytest`（`pip install pytest`）——**無** Docker / OpenShell / Ollama（測試把外部邊界 mock 掉）。

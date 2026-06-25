@@ -103,6 +103,59 @@
 
 ---
 
+## capacity-estimation ← AI-Agent 容量估算 DR
+
+源 DR：[`AI Agent 時代的計算系統容量估算與架構設計研究報告.md`](<AI Agent 時代的計算系統容量估算與架構設計研究報告.md>)
+· 落地產物：[`sandboxes/capacity-estimation/RUN.md`](../sandboxes/capacity-estimation/RUN.md)
+· 入口：直接跑 `sandboxes/capacity-estimation/src/capacity_kernel.py`（DOC-ONLY）
+
+### ✅ 跑 `capacity_kernel.py estimate/judge` 即真實復現
+
+| DR 章節 | DR 原文敘述 | RUN.md 跑出的證據 |
+|---|---|---|
+| **§2 代理放大 / 吞吐** | 「Agent 把 1 個用戶請求放大成 N 次 LLM 調用；估 QPS / token TPS」 | estimate 的 DR 範例 → `agent_qps=40`, `total_tps=140000`（忠實複現 DR worked example） |
+| **§3 顯存 = 權重 + KV** | 「VRAM = 模型權重 + KV cache；KV/token = 2·layers·hidden·2bytes」 | `kv_per_token_bytes=327680`(exact), `weights gb=140`, `total_vram gb=182.95`, `cards_needed=3`（80GB 卡） |
+| **§5 架構檢核表 → 可行性** | 「對照預算逐項檢核，標出不可行的綁定約束 + 對應架構/代碼槓桿」 | judge exit 0/3；INFEASIBLE 時逐綁定帶 macro lever（卡/TP/RAM）+ micro lever（FP8 KV / PagedAttention …） |
+| **RAG 記憶 RAM** | 「向量庫 RAM = raw + index 開銷（HNSW ~1.8×）」 | `rag raw gb=122.88`, `with_index gb=184.32`, 推薦 index 隨 recall/latency 需求切換 |
+
+### ⚠ 只落地「估算 + 裁定」那塊（誠實邊界）
+
+- kernel 是 **back-of-envelope 估算**（DR 自身定位），**非**真跑 vLLM/SGLang benchmark——數字是公式產物非實測。
+- 優化技術（PagedAttention/RadixAttention/SQ8/DiskANN）只**援引量化效果當槓桿建議**，不重實作那些引擎。
+
+### ❌ DR 講了但 `capacity_kernel.py` 不驗證
+
+- **架構決策本身**（買不買卡 / 開不開 FP8）= 人的 LAND-DECISION，kernel 只給數字 + 綁定約束 + 槓桿。
+- **真實 benchmark 數字**（DR 引用的 throughput/latency 實測）— 範圍外。
+
+---
+
+## fullstack-design-judge ← 分散式前後端/BFF/Agent-async DR
+
+源 DR：[`現代分散式系統架構下前後端需求拆分、BFF 模式演進與 AI Agent 異步任務調度之深度技術研究報告.md`](<現代分散式系統架構下前後端需求拆分、BFF 模式演進與 AI Agent 異步任務調度之深度技術研究報告.md>)
+· 落地產物：[`sandboxes/fullstack-design-judge/RUN.md`](../sandboxes/fullstack-design-judge/RUN.md)
+· 入口：直接跑 `sandboxes/fullstack-design-judge/src/judge_selftest.py`（DOC-ONLY，composes self-correcting-loop）
+
+### ✅ 跑 `judge_selftest.py` 即真實復現
+
+| DR 章節 | DR 原文敘述 | RUN.md 跑出的證據 |
+|---|---|---|
+| **前後端需求拆分 / SoC** | 「契約先行 SSOT、前端不持權威計算、關注點分離四步驟」 | macro rubric 10 軸 + micro rubric 11 軸（runnable/rubric kind 切分）；selftest `combined_eq_macro_union_micro` 機械驗無漂移 |
+| **BFF 模式演進** | 「BFF 聚合層、BFF vs Gateway 分野、BFF-OAuth 拓撲」 | rubric 對應軸（5/6/7）；DECIDE 復用 self-correcting-loop kernel，`CONSUMED:self-correcting-loop` 印在 trace |
+| **Agent 異步任務調度** | 「異步解耦、協議取捨、並行扇出、任務可觀測」 | micro 軸 runnable（idempotency / cookie 四屬性 / 契約測試）+ rubric（串流韌性 / 任務可觀測）；`single_fail_iterating` 證 ITERATING+focus |
+
+### ⚠ 只落地「rubric 標準」那塊（誠實邊界）
+
+- 唯一新增 = **DR 蒸餾的領域 rubric**；DECIDE 迴圈引擎是**復用** self-correcting-loop，非重造。
+- kernel 保證 FINAL 機械蘊含於**所宣稱**分數，**不**保證分數本身誠實——評分是 LLM/人 VERIFY 職責。
+
+### ❌ DR 講了但 selftest 不驗證
+
+- **opinionated 絕對主張**（「SSE 最優」「扇出 60-70%」）— rubric 已改成條件式（external-verified RFC/IETF/OWASP），不當絕對對錯判。
+- **真 artifact 的代碼/測試** 才能跑 runnable 軸真 exit code；純設計文件用 `.macro.` rubric。
+
+---
+
 ## self-correcting-loop — 無 DR
 
 `self-correcting-loop` **不源自 DR**，而是源自使用者直接給的 PLAN/DO/VERIFY/DECIDE 迴圈協定，故不在本對應圖內。

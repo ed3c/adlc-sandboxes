@@ -1,0 +1,4 @@
+# runtime traces are local-only (Session-LIVE artifacts); the public evidence for this sandbox is RUN.md
+# (a real transcript) + the tests. Internal gate records do not travel to this mirror.
+*.json
+!.gitkeep

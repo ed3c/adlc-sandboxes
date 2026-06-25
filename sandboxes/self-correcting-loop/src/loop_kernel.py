@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """loop_kernel — deterministic DECIDE gate for a PLAN/DO/VERIFY/DECIDE self-correcting loop.
 
-WHY: a self-correcting refinement loop ("iterate until every rubric criterion >= threshold") is
-only as honest as its DECIDE step. If an LLM both produces the artifact AND judges "all criteria
-are 8/10, so FINAL", the loop can self-deceive (hallucination propagation; structure passes but
-behavior fails). This kernel MECHANIZES the DECIDE step into a determinate function (deterministic,
-zero LLM scoring): FINAL is entailed by actual scores >= thresholds, never by an agent's prose
-claim. The LLM still owns PLAN (what to fix), DO (produce/improve), and VERIFY (assign each
-criterion a score); the kernel owns only DECIDE + convergence tracking + the bounded-iteration
-SURFACE guard.
+WHY (the demand,  human-admitted, supply-push-landed-in-sandbox): a self-correcting
+refinement loop ("iterate until every rubric criterion >= threshold") is only as honest as its
+DECIDE step. If an LLM both produces the artifact AND judges "all criteria are 8/10, so FINAL",
+the loop can self-deceive (the issue hallucination propagation; the issue structure-passes-behavior-fails).
+This kernel MECHANIZES the DECIDE step into a determinate function (deterministic (no LLM-judge), zero LLM scoring):
+FINAL is entailed by actual scores >= thresholds, never by an agent's prose claim. The LLM still
+owns PLAN (what to fix), DO (produce/improve), and VERIFY (assign each criterion a score); the
+kernel owns only DECIDE + convergence tracking + the bounded-iteration SURFACE guard.
 
-This COMPOSES the existing loop layer rather than building a new engine: autoresearch is the
+This COMPOSES the existing loop layer (no new engine — no new engine): autoresearch is the
 code-metric iteration instance, /refactor-loop the refactor instance; this is the generic
 artifact-to-rubric instance whose one novel part is the deterministic DECIDE gate.
 
 DETERMINISM: pure functions; no datetime.now()/random — the only timestamp source is an explicit
-`iso` argument. Tie-breaking is fully ordered (lowest score, then rubric declared order), so
-decide() is a pure function of inputs.
+`iso` argument (parity with the sandbox gate / promotion_redset_attribution). Tie-breaking is
+fully ordered (lowest score, then rubric declared order), so decide() is a pure function of inputs.
 
 EXIT SEMANTICS (CLI):
   selftest : 0 = kernel behaves correctly against bundled fixtures · 1 = a self-check failed
@@ -24,7 +24,9 @@ EXIT SEMANTICS (CLI):
   state    : 0 = printed a bounded loop-state snapshot · 1 = no such loop / unreadable
 
 Related docs:
-- Interface contract: sandboxes/self-correcting-loop/SKILL.md + manifest.yaml
+- Interface contract: sandboxes/self-correcting-loop/SKILL.md (C1-C5) + manifest.yaml
+- Loop governance + DCI 5-rule contract: .claude/skills/adlc/skill.md S1/S3
+- Convention: sandboxes/README.md + sandboxes/_TEMPLATE/
 """
 from __future__ import annotations
 
@@ -47,20 +49,27 @@ class RubricError(Exception):
     """Fail-loud input defect (malformed rubric / scorecard). Never silently coerced."""
 
 
+VALID_KINDS = ("rubric", "runnable")
+
+
 @dataclass(frozen=True)
 class Criterion:
     id: str
     threshold: int = DEFAULT_THRESHOLD
     description: str = ""
+    # "rubric"   → value is an LLM-assigned 1-10 score; pass = score >= threshold (semantic "good enough").
+    # "runnable" → value is a command EXIT CODE reported by VERIFY; pass = exit_code == 0 (deterministic,
+    #              zero-LLM). threshold is irrelevant for a runnable criterion (ignored in decide).
+    kind: str = "rubric"
 
 
 @dataclass
 class Decision:
     verdict: str                       # "FINAL" | "ITERATING"
     focus: str | None                  # weakest failing criterion id; None iff FINAL
-    min_score: int
-    failing: list[str]                 # criteria below threshold, weakest-first
-    per_criterion: dict                # id -> {"score","threshold","pass"}
+    min_score: int                     # min effective_score across ALL criteria (failing runnable pins 0)
+    failing: list[str]                 # not-passing criteria, weakest-first (by effective_score)
+    per_criterion: dict                # id -> {"score","threshold"|"runnable","pass","kind"}
 
     def to_dict(self) -> dict:
         return {
@@ -86,15 +95,20 @@ def load_rubric(obj) -> list[Criterion]:
         if cid in seen:
             raise RubricError(f"duplicate criterion id {cid!r}")
         seen.add(cid)
+        kind = str(c.get("kind", "rubric"))
+        if kind not in VALID_KINDS:
+            raise RubricError(f"criterion {cid!r} kind must be one of {list(VALID_KINDS)}, got {kind!r}")
         thr = c.get("threshold", DEFAULT_THRESHOLD)
-        if not isinstance(thr, int) or not (SCORE_MIN <= thr <= SCORE_MAX):
+        # threshold only governs rubric criteria; for runnable it is irrelevant (pass = exit 0).
+        if kind == "rubric" and (not isinstance(thr, int) or not (SCORE_MIN <= thr <= SCORE_MAX)):
             raise RubricError(f"criterion {cid!r} threshold must be an int in [{SCORE_MIN},{SCORE_MAX}], got {thr!r}")
-        out.append(Criterion(id=cid, threshold=thr, description=str(c.get("description", ""))))
+        out.append(Criterion(id=cid, threshold=thr, description=str(c.get("description", "")), kind=kind))
     return out
 
 
 def validate_scorecard(rubric: list[Criterion], scorecard: dict) -> None:
-    """Every rubric criterion must be scored, in range. Extra/missing keys fail loud (no silent default)."""
+    """Every criterion must be scored, by kind. rubric → int in [SCORE_MIN,SCORE_MAX]; runnable → a
+    non-negative int exit code. Extra/missing keys fail loud (no silent default). bool always rejected."""
     if not isinstance(scorecard, dict):
         raise RubricError("scorecard must be a dict of {criterion_id: score}")
     rubric_ids = {c.id for c in rubric}
@@ -104,31 +118,49 @@ def validate_scorecard(rubric: list[Criterion], scorecard: dict) -> None:
     extra = sorted(scorecard.keys() - rubric_ids)
     if extra:
         raise RubricError(f"scorecard has unknown criteria not in rubric: {extra}")
+    by_kind = {c.id: c.kind for c in rubric}
     for cid in sorted(rubric_ids):
         s = scorecard[cid]
-        if not isinstance(s, int) or isinstance(s, bool) or not (SCORE_MIN <= s <= SCORE_MAX):
-            raise RubricError(f"score for {cid!r} must be an int in [{SCORE_MIN},{SCORE_MAX}], got {s!r}")
+        if by_kind[cid] == "runnable":
+            # an exit code: non-negative int, bool rejected (True==1 would silently look like a fail-exit)
+            if not isinstance(s, int) or isinstance(s, bool) or s < 0:
+                raise RubricError(f"exit code for runnable criterion {cid!r} must be a non-negative int, got {s!r}")
+        else:
+            if not isinstance(s, int) or isinstance(s, bool) or not (SCORE_MIN <= s <= SCORE_MAX):
+                raise RubricError(f"score for {cid!r} must be an int in [{SCORE_MIN},{SCORE_MAX}], got {s!r}")
 
 
 # ── the deterministic DECIDE gate ─────────────────────────────────────────────
 
 def decide(rubric: list[Criterion], scorecard: dict) -> Decision:
-    """Pure: FINAL iff every criterion score >= its threshold; else ITERATING with the weakest
-    failing criterion as focus. Tie-break = lowest score, then rubric declared order (stable)."""
+    """Pure: FINAL iff every criterion passes; else ITERATING with the weakest failing criterion as
+    focus. Per criterion: rubric passes iff score >= threshold; runnable passes iff exit_code == 0.
+    `effective_score` unifies ordering across kinds — rubric → its raw score, runnable → SCORE_MAX if
+    pass else 0 — so a failing runnable (effective 0) focuses BEFORE a low rubric score (a failing test
+    is a hard blocker). Tie-break = lowest effective_score, then rubric declared order (stable)."""
     validate_scorecard(rubric, scorecard)
     order = {c.id: i for i, c in enumerate(rubric)}
     per: dict = {}
+    effective: dict = {}
     failing: list[str] = []
     for c in rubric:
         s = scorecard[c.id]
-        passed = s >= c.threshold
-        per[c.id] = {"score": s, "threshold": c.threshold, "pass": passed}
+        if c.kind == "runnable":
+            passed = s == 0
+            eff = SCORE_MAX if passed else 0
+            thr_field = "runnable"
+        else:
+            passed = s >= c.threshold
+            eff = s
+            thr_field = c.threshold
+        effective[c.id] = eff
+        per[c.id] = {"score": s, "threshold": thr_field, "pass": passed, "kind": c.kind}
         if not passed:
             failing.append(c.id)
-    failing.sort(key=lambda cid: (scorecard[cid], order[cid]))
+    failing.sort(key=lambda cid: (effective[cid], order[cid]))
     verdict = "FINAL" if not failing else "ITERATING"
     focus = failing[0] if failing else None
-    min_score = min(scorecard[c.id] for c in rubric)
+    min_score = min(effective[c.id] for c in rubric)
     return Decision(verdict=verdict, focus=focus, min_score=min_score, failing=failing, per_criterion=per)
 
 
@@ -179,7 +211,7 @@ def _atomic_write_json(path: Path, payload: dict) -> None:
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def _render_state_snapshot(state: dict) -> str:
-    """Bounded (<=~12 lines) loop-state snapshot for DCI injection (bounded output)."""
+    """Bounded (<=~12 lines) loop-state snapshot for DCI injection (adlc DCI rule 2: bounded output)."""
     iters = state.get("iterations", [])
     lines = [f"loop iterations: {len(iters)}/{state.get('max_iterations', DEFAULT_MAX_ITERATIONS)}"]
     if iters:
@@ -219,6 +251,19 @@ def _cmd_selftest(iso: str) -> int:
         checks.append(("out_of_range_failloud", False))
     except RubricError:
         checks.append(("out_of_range_failloud", True))
+
+    # runnable criterion (D3): pass/fail is a command EXIT CODE, not an LLM rubric score, mixable
+    # with rubric criteria in one decide(). exit 0 → that criterion passes; exit 1 → ITERATING focuses it.
+    run_rubric = load_rubric(_load_json(_FIXTURES / "rubric-runnable.json"))
+    run_pass = decide(run_rubric, _load_json(_FIXTURES / "scorecard-runnable-pass.json"))
+    checks.append(("runnable_pass_final", run_pass.verdict == "FINAL"))
+    checks.append(("runnable_pass_flag", run_pass.per_criterion["tests"]["pass"] is True))
+
+    run_fail = decide(run_rubric, _load_json(_FIXTURES / "scorecard-runnable-fail.json"))
+    # reverse case: a failing test (exit 1) MUST flip the verdict to ITERATING and focus the runnable —
+    # a kernel that ignored the exit code would stay FINAL here (the discriminating self-check).
+    checks.append(("runnable_fail_iterating", run_fail.verdict == "ITERATING"))
+    checks.append(("runnable_fail_focus", run_fail.focus == "tests"))
 
     ok = all(passed for _, passed in checks)
     trace = {"schema": "loop-kernel-selftest/v1", "iso": iso, "ok": ok,

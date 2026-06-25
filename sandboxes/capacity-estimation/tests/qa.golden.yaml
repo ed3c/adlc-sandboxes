@@ -1,4 +1,4 @@
-# sandboxes/self-correcting-loop/tests/qa.golden.yaml — the sandbox gate qa tier fixture.
+# sandboxes/capacity-estimation/tests/qa.golden.yaml — the sandbox gate qa tier fixture.
 # BOW-cosine (deterministic, no Ollama) scores each query against THIS sandbox's SKILL.md routing
 # surface; actual = trigger if cosine > min_score else no_trigger. regression green iff every
 # actual == expected_current (the issue behavioral-golden). expected_current = MEASURED baseline (filled
@@ -6,17 +6,17 @@
 schema: sandbox-qa-golden/v1
 min_score: 0.05
 cases:
-  # should-trigger: queries sharing real tokens with the DECIDE-gate routing surface
+  # should-trigger: queries sharing real tokens with the capacity-estimation routing surface
   - id: QA-01
-    query: "run a self-correcting loop and decide FINAL or ITERATING against a rubric"
+    query: "estimate GPU VRAM and KV cache for an AI agent serving system at batch size 32"
     ground_truth: trigger
     expected_current: trigger
   - id: QA-02
-    query: "rubric gate: is every criterion above its threshold or keep iterating, give the weakest focus"
+    query: "judge whether this agent architecture is capacity-feasible: how many GPU cards, tensor parallelism, token throughput"
     ground_truth: trigger
     expected_current: trigger
   - id: QA-03
-    query: "PLAN DO VERIFY DECIDE 自我修正迴圈 迭代收斂"
+    query: "AI Agent 容量估算 代理放大係數 Token 吞吐量 顯存併發 向量資料庫 RAM 架構檢核表"
     ground_truth: trigger
     expected_current: trigger
   # should-not-trigger: adjacent-domain queries that must route to NEIGHBOR sandboxes, not here
@@ -25,6 +25,6 @@ cases:
     ground_truth: no_trigger
     expected_current: no_trigger
   - id: QA-05
-    query: "index documents into the local vector store for air-gapped retrieval"
+    query: "render a land-plan slice set to an annotatable HTML and open a lavish session for plan feedback"
     ground_truth: no_trigger
     expected_current: no_trigger

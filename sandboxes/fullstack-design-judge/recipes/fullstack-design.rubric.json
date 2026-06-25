@@ -1,0 +1,28 @@
+{
+  "_provenance": "COMBINED rubric = macro ∪ micro (the full DR concept set, all 10 axes × both tiers). Use for a single-pass full-compliance judge. The two-tier flow (.macro. then .micro.) is preferred to GUIDE 宏觀架構→微觀代碼; this combined file is the 'everything at once' check. judge_selftest.py mechanically asserts this file's id-set == macro ids ∪ micro ids (drift guard).",
+  "_tier": "combined — macro(10) + micro(11) = 21 criteria",
+  "_usage": "python3 sandboxes/self-correcting-loop/src/loop_kernel.py decide --rubric <this> --scorecard <S>",
+  "criteria": [
+    {"id": "m_zero_trust_boundary", "threshold": 9, "description": "零信任邊界：後端對所有安全敏感操作（金額/數量/權限/狀態變更）設獨立校驗邊界，絕不信任前端輸入；前端校驗僅 UX，不承擔安全決策。不出現『前端已校驗故後端可省』反模式。[DR 軸1]"},
+    {"id": "m_contract_first_ssot", "threshold": 8, "description": "契約先行 + 單一 SSOT：API 合約動工前共同定義且為單一真相源（共享 contract package, TS-first Schema），前後端共用同一 schema 消 Validation Drift；合約=並行開發/責任歸屬/防數據不一致最高準則。[DR 軸2]"},
+    {"id": "m_soc_responsibility_split", "threshold": 8, "description": "關注點分離 + 四步驟拆分：對齊『User Story→前端職責→後端職責→API 合約』；高風險操作（高頻/資金/狀態）標記歸後端權威；前端=展現+互動、後端=業務+安全+持久化。[DR 軸3]"},
+    {"id": "m_concurrency_control_design", "threshold": 9, "description": "持久層強併發控制：限量資源扣減用原子 check-and-update 或鎖（單庫=悲觀鎖 FOR UPDATE；跨服務=分散式鎖 Redis SETNX/Redlock），非 check-then-act；顯式防 TOCTOU。[DR 軸4]"},
+    {"id": "m_bff_aggregation_layer", "threshold": 8, "description": "BFF 聚合層：一端一 BFF（不退化成通用網關）、無狀態、只做聚合+裁剪+協議轉換、對下游異步扇出；核心微服務保持純粹不為特定前端定制。[DR 軸5]"},
+    {"id": "m_bff_gateway_separation", "threshold": 8, "description": "BFF vs API Gateway 分野：橫向基礎設施（TLS/限流/DDoS/路由/API密鑰，平台團隊）在 Gateway；縱向體驗（Payload適配/扇出/協議轉換/用戶Session）在 BFF（前端團隊）。職責與所有權邊界清晰。[DR 軸6]"},
+    {"id": "m_bff_token_topology", "threshold": 9, "description": "BFF-as-confidential-client 安全拓撲（IETF oauth-browser-based-apps §6.1 BCP）：Token 留後端 Session Store，瀏覽器只持 Session Cookie，BFF 轉發注入 Bearer；token 永不入瀏覽器。BFF 持 Client Secret 跑 Auth Code+PKCE；Implicit/ROPC deprecated（RFC9700/OAuth2.1）。BFF 優於 TMB 須框成條件式（更安全但更複雜、須代理全流量），非『永遠贏』。[DR 軸7]"},
+    {"id": "m_async_task_decoupling", "threshold": 8, "description": "長效任務同步→異步解耦：>數秒任務用『立即 202+Task_ID，真工作丟分散式 Worker 隊列（Celery/Arq/Temporal）』，Web 進程不被佔線程；前端有進度通道；後端對 Agent→DB 有保護。補正：Edge runtime 有硬牆（Vercel 300s / CF Workers 5min CPU），超牆長串流須路由到 durable 層。[DR 軸8]"},
+    {"id": "m_protocol_choice_justified", "threshold": 8, "description": "協議選型顯式論證（CONDITIONAL；RFC9000/9114 驗）：單向流傾向 SSE；引用 QUIC 消 HOL 須限定跨流傳輸層（單 SSE 流仍 ordered，宣稱『徹底』消所有 HOL=失分），0-RTT 須註 session-resumption+replay-exposed。選 WS 須處理架構稅（跨節點廣播+Session Affinity+Heartbeat）。agent 補正：長 agent 任務的雙向控制（中斷/即時引導/tool-upload）正是該用 WS 的子案，『SSE 最優』對 agentic 非無條件。[DR 軸9]"},
+    {"id": "m_parallel_fanout_design", "threshold": 8, "description": "並行扇出 vs 序列（fork-join/critical-path 模型，已驗確定）：獨立子調用並行扇出使延遲≈max(t_i)+t_n 非 Σ；基於依賴圖。須認模型邊界：忽略 fork 開銷+連接池上限（max 偏樂觀）；t_n 記帳（共享聚合=Σt_i+t_n）。收益≈1−1/N 衰減，禁固定%（60-70%=N≈3-4 理想點非實測）。[DR 軸10]"},
+    {"id": "c_negative_value_rejected", "kind": "runnable", "description": "VERIFY 繞 UI 直打 API 送負向/邊界值（-1/0/超大）→ 斷言後端 4xx 拒絕。exit 0=全攔截。[DR 軸1 micro]"},
+    {"id": "c_shared_schema_no_dup", "kind": "runnable", "description": "VERIFY grep/AST 確認校驗 schema 單一 SSOT、無重複同義定義。exit 0=無重複。[DR 軸2 micro]"},
+    {"id": "c_contract_test_ci", "kind": "runnable", "description": "VERIFY 跑 CI 合約測試（Schemathesis/Pact）對照契約，未說明 API 變更紅燈。exit 0=一致。[DR 軸2 micro]"},
+    {"id": "c_atomic_concurrency", "kind": "runnable", "description": "VERIFY 跑並發測試（同資源 N 並發）對原子扣減/鎖代碼 → 無超發/重複/雙扣。exit 0=安全。[DR 軸4 micro]"},
+    {"id": "c_idempotency_dedup", "kind": "runnable", "description": "VERIFY 重送同 idempotency_key → 只生效一次。exit 0=冪等。[DR 軸4 micro]"},
+    {"id": "c_session_cookie_attrs", "kind": "runnable", "description": "VERIFY 解析 Set-Cookie → Session Cookie 設齊 HttpOnly+Secure+SameSite(Strict/Lax)+__Host-+Path=/+無 Domain（RFC 6265bis §4.1.3/OWASP/IETF），token 不在 localStorage/JS-可達。exit 0=齊全且 token 不入瀏覽器。[DR 軸7 micro]"},
+    {"id": "c_tests_pass", "kind": "runnable", "description": "VERIFY 跑 artifact 測試套件 → exit code。exit 0=全綠（failing test=硬阻斷）。[通用代碼閘]"},
+    {"id": "c_frontend_no_authority", "threshold": 9, "description": "前端代碼不含 authoritative 業務計算：金額/折扣/庫存最終值由後端 DB 原價重算，前端只打包+渲染。[DR 軸1+3 micro]"},
+    {"id": "c_parallel_not_serial", "threshold": 8, "description": "獨立子調用代碼用並行扇出（Promise.all/gather）非串行 await；有依賴才序列；對共享連接池/併發上限有防護。[DR 軸10 micro]"},
+    {"id": "c_streaming_impl_resilient", "threshold": 8, "description": "串流韌性（CONDITIONAL）：SSE 用原生重連+Last-Event-ID、text/event-stream+資源回收，處理 EventSource 無自訂 auth header 限制 + Edge 串流牆；WS 用 Heartbeat+殭屍回收+跨節點廣播。[DR 軸9 micro]"},
+    {"id": "c_task_lifecycle_observable", "threshold": 8, "description": "任務生命週期可觀測：Task_ID 可查詢/訂閱，狀態（PENDING/RUNNING/DONE/FAILED）明確；前端進度視覺化消費後端進度緩存+事件分發。[DR 軸8 micro]"}
+  ]
+}

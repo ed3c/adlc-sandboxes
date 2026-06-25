@@ -1,0 +1,7 @@
+[
+  {"id": "amplification_rpm", "kind": "runnable", "description": "DR Step-1 Agent 放大率 — Agent QPS×60 within backend RPM limit (0=within budget; budget key backend_rpm_limit)"},
+  {"id": "token_throughput_tpm", "kind": "runnable", "description": "DR Step-2 Token 吞吐量 — (input+output) TPS×60 within TPM budget (budget key tpm_budget)"},
+  {"id": "vram_concurrency", "kind": "runnable", "description": "DR Step-3 顯存與併發 — cards_needed (weights + KV=(2·L·H_kv·D_head·S·B·Prec)/TP) within cards_available (budget key cards_available)"},
+  {"id": "prefix_cache_breakeven", "kind": "runnable", "description": "DR Step-4 前綴快取調度 — prefix-cache hit-rate ≥ breakeven (default 30%; spec.prefix_cache.hit_rate)"},
+  {"id": "rag_ram", "kind": "runnable", "description": "DR Step-5 記憶與知識庫 — RAG index RAM (N·d·4·α_HNSW) within host RAM (budget key host_ram_gb)"}
+]

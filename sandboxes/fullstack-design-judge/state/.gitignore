@@ -1,0 +1,3 @@
+# per-loop runtime state — machine-local, not tracked
+*.json
+!.gitkeep

@@ -27,6 +27,9 @@ run "sandcastle-orchestration · selftest" bash -c 'cd "'"$ROOT"'/sandboxes/sand
 run "sandcastle-orchestration · pytest"   python3 -m pytest -q sandboxes/sandcastle-orchestration/tests/
 run "arch-fitness · selftest" bash -c 'cd "'"$ROOT"'/sandboxes/arch-fitness" && python3 src/arch_fitness_kernel.py selftest --iso 2026-06-24'
 run "arch-fitness · pytest"   python3 -m pytest -q sandboxes/arch-fitness/tests/
+run "capacity-estimation · selftest" bash -c 'cd "'"$ROOT"'/sandboxes/capacity-estimation" && python3 src/capacity_kernel.py selftest --iso 2026-06-24'
+run "capacity-estimation · pytest"   python3 -m pytest -q sandboxes/capacity-estimation/tests/
+run "fullstack-design-judge · selftest" bash -c 'cd "'"$ROOT"'/sandboxes/fullstack-design-judge" && python3 src/judge_selftest.py --iso 2026-06-24'
 
 if [ "$fail" -eq 0 ]; then echo "ALL GREEN ✅"; else echo "SOME FAILED ❌"; fi
 exit "$fail"

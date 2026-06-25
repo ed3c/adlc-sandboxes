@@ -1,0 +1,29 @@
+# sandboxes/fullstack-design-judge/tests/qa.golden.yaml
+# the sandbox gate 問答 tier 機械消費：每 case 用 BOW-cosine 對本沙盒 SKILL.md routing surface 評分
+# （deterministic，無 Ollama，sandbox-scoped），actual = trigger if cosine > min_score else no_trigger。
+# regression 語義（the issue behavioral-golden）：exit 0 iff ∀case actual == expected_current（measured baseline，非預測）。
+schema: sandbox-qa-golden/v1
+min_score: 0.05
+cases:
+  # should-trigger：含本沙盒 SKILL routing surface 的 verbatim token（BOW-cosine 認空白分隔整詞）
+  - id: QA-01
+    query: "judge a BFF design against the rubric — macro 架構 and micro 代碼 (DESIGN or CODE)"
+    ground_truth: trigger
+    expected_current: trigger
+  - id: QA-02
+    query: "前後端架構評判 分散式設計評判 BFF design rubric macro micro 引導宏觀架構與微觀代碼 evals 標準"
+    ground_truth: trigger
+    expected_current: trigger
+  - id: QA-03
+    query: "fullstack-design-judge BFF 前後端 AI-Agent 異步任務調度 design Judge evals 標準"
+    ground_truth: trigger
+    expected_current: trigger
+  # should-not-trigger：不該觸發本沙盒的無關 / sibling query（反過度觸發，the issue 路由污染）
+  - id: QA-04
+    query: "在 OpenShell 沙盒裡執行 untrusted 代碼做 containment 驗證"
+    ground_truth: no_trigger
+    expected_current: no_trigger
+  - id: QA-05
+    query: "量測 Martin I/A/D 耦合痛苦區與 Clean-Arch 分層依賴違規"
+    ground_truth: no_trigger
+    expected_current: no_trigger

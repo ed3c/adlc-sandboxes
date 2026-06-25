@@ -1,0 +1,18 @@
+{
+  "_provenance": "Distilled from the same DR (). MICRO tier = code-implementation criteria. Mechanically-checkable axes are kind:runnable (VERIFY runs a real command, exit 0 = pass, ZERO LLM judgment — deterministic (no LLM-judge)); irreducibly-semantic code-quality axes stay kind:rubric (LLM-scored 1-10). Security cookie attributes sharpened with external-verified RFC 6265bis §4.1.3 / OWASP / IETF anchors.",
+  "_tier": "micro — 微觀代碼實現方向（judged against actual CODE; mixes runnable + rubric）",
+  "_usage": "Feed to the self-correcting-loop kernel after the .macro. architecture has converged. The runnable criteria require the real artifact's code/tests to run; for a design-doc-only judge use the .macro. rubric instead.",
+  "criteria": [
+    {"id": "c_negative_value_rejected", "kind": "runnable", "description": "VERIFY 跑一個繞過 UI 直打 API 的測試，送負向/邊界值（數量=-1、金額=0、超大值）→ 斷言後端以 4xx 明確拒絕而非靜默接受。exit 0 = 全部被攔截。[DR 軸1 micro，零信任的機械證]"},
+    {"id": "c_shared_schema_no_dup", "kind": "runnable", "description": "VERIFY grep/AST 確認校驗 schema 單一 SSOT：前後端 import 同一份 contract schema，無重複的同義校驗規則定義。exit 0 = 無重複定義（改規則只動一處）。[DR 軸2 micro]"},
+    {"id": "c_contract_test_ci", "kind": "runnable", "description": "VERIFY 跑 CI 的合約測試（Schemathesis/Pact）對照 OpenAPI/契約 → 未說明的 API 形狀變更應紅燈。exit 0 = 後端實現與契約一致。[DR 軸2 micro]"},
+    {"id": "c_atomic_concurrency", "kind": "runnable", "description": "VERIFY 跑並發測試（同一限量資源 N 個並發請求）對真實扣減代碼（原子 UPDATE...WHERE 舊狀態 + 檢查 affected rows，或鎖）→ 斷言無超發/重複兌換/雙重扣款。exit 0 = 併發安全。[DR 軸4 micro]"},
+    {"id": "c_idempotency_dedup", "kind": "runnable", "description": "VERIFY 對寫操作 API 重送同一 idempotency_key → 斷言只生效一次（後端據 key 去重）。exit 0 = 冪等。[DR 軸4 micro]"},
+    {"id": "c_session_cookie_attrs", "kind": "runnable", "description": "VERIFY 解析受保護登入流的 Set-Cookie → 斷言 Session Cookie 設齊 HttpOnly + Secure + SameSite=Strict(或Lax) + __Host- 前綴 + Path=/ + 無 Domain 屬性（RFC 6265bis §4.1.3 / OWASP Session Mgmt / IETF oauth-browser-based-apps §6.1），且 Access/Refresh Token 不出現在 localStorage/sessionStorage/非-HttpOnly cookie/JS-可達記憶體。exit 0 = 屬性齊全且 token 不入瀏覽器。[DR 軸7 micro，external-verified 機械證]"},
+    {"id": "c_tests_pass", "kind": "runnable", "description": "VERIFY 跑 artifact 的測試套件（含上述行為測試）→ 回 exit code。exit 0 = 全綠（硬阻斷：failing test 比散文差兩分更該先修）。[通用代碼閘]"},
+    {"id": "c_frontend_no_authority", "threshold": 9, "description": "前端代碼不含任何 authoritative 業務計算：金額/折扣/庫存最終值由後端用 DB 記錄的原價重算，前端只負責打包購物車 + 渲染結果，本地計算絕不直接影響核心結帳。[DR 軸1+3 micro，語義]"},
+    {"id": "c_parallel_not_serial", "threshold": 8, "description": "獨立子調用的實際代碼用並行扇出（Promise.all / asyncio.gather）而非串行 await 逐個；有依賴的才序列。聚合延遲量級接近 max(t_i)+t_n 而非 Σ，且代碼對共享連接池/併發上限有防護（避免對單一後端的扇出卡連接上限退化成序列）。[DR 軸10 micro，語義]"},
+    {"id": "c_streaming_impl_resilient", "threshold": 8, "description": "串流實作具韌性（CONDITIONAL）：若用 SSE，利用原生自動重連 + Last-Event-ID 斷線恢復（非手寫重試緩衝）、text/event-stream + 資源回收（GeneratorExit），且處理 EventSource 無法設自訂 auth header 的限制（fetch-polyfill 或 cookie 認證）+ 部署於 Edge 時尊重串流上限牆；若用 WebSockets，實作 Heartbeat + 殭屍回收 + 跨節點廣播。判據隨所選協議而定。[DR 軸9 micro，語義]"},
+    {"id": "c_task_lifecycle_observable", "threshold": 8, "description": "任務生命週期可觀測：狀態可由 Task_ID 查詢/訂閱，生命週期（PENDING/RUNNING/DONE/FAILED）明確；前端進度視覺化透過後端進度緩存 + 事件分發消費，而非空轉等待單一同步響應。[DR 軸8 micro，語義]"}
+  ]
+}

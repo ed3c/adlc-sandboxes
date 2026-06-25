@@ -3,8 +3,9 @@
 > 「全景圖」義：列所有沙盒 + 暴露能力 + 啟動方式 + wiring 狀態。**機器可解**（下方每個 ```yaml sandbox```
 > block 都可程式解析），人讀的 markdown 表只給人看。存在 ≠ 接線——以 `wiring` 狀態為準。
 >
-> 本 repo 有 **5 個真實沙盒**——`openshell-containment` / `turbovec` / `self-correcting-loop` /
-> `sandcastle-orchestration` / `arch-fitness`。下方標 `(example — not a real sandbox)` 的 block 是 schema 示範。
+> 本 repo 有 **7 個真實沙盒**——`openshell-containment` / `turbovec` / `self-correcting-loop` /
+> `sandcastle-orchestration` / `arch-fitness` / `capacity-estimation` / `fullstack-design-judge`。下方標
+> `(example — not a real sandbox)` 的 block 是 schema 示範。
 
 ## 人讀層（markdown 表）
 
@@ -15,6 +16,8 @@
 | self-correcting-loop | deterministic DECIDE gate for a PLAN/DO/VERIFY/DECIDE loop — FINAL iff ∀criterion ≥ threshold, else ITERATING + weakest focus; bounded no-progress/exhaustion guard | /self-correcting-loop | LIVE |
 | sandcastle-orchestration | run sandcastle's working composition (head-run container-isolated agent + host-git branch/commit = merge-back outcome + host exec-gate) against a fixture/throwaway repo, project to a deterministic observation-record | /sandcastle-orchestration | LIVE |
 | arch-fitness | deterministic architecture-fitness Judge/evals standard — measure CODE vs an arch-model spec → Clean-Arch layer + module-boundary violations + Martin I/A/D coupling + AST smells; PASS iff 0 hard violations; AS the VERIFY/Judge for a self-correcting loop | — (direct: kernel) | LIVE |
+| capacity-estimation | deterministic AI-Agent capacity estimator + feasibility rubric judge — 5 DR metrics (Agent QPS / token TPS / VRAM=weights+KV / prefix-cache breakeven / RAG RAM); FEASIBLE iff every budgeted criterion within budget, else INFEASIBLE + binding constraint + macro/micro lever; projects to a self-correcting-loop runnable scorecard | — (direct: kernel) | LIVE |
+| fullstack-design-judge | DR-distilled Judge rubric (10 macro architecture + 11 micro code axes) for a distributed FE/BE + BFF + agent-async system; DECIDE delegated to the self-correcting-loop kernel (CONSUMED:self-correcting-loop proven); guides macro design → micro code | — (direct: selftest) | LIVE |
 
 ## 機器層（每沙盒一 block）
 
@@ -81,4 +84,22 @@ command: none   # DOC-ONLY entry — run src/arch_fitness_kernel.py directly (se
 triggers: [arch-fitness, 架構適應度, architecture-erosion, model-code-gap, layer-dependency, fitness-function]
 launch_precondition: "!`python3 --version`"
 wiring: LIVE   # static + qa 27/27 + runtime selftest exit 0 (13 dims discriminated, sample→FAIL/clean→PASS). runtime-proven.
+```
+
+```yaml sandbox
+name: capacity-estimation
+exposed_capability: "deterministic AI-Agent capacity estimator + feasibility rubric judge — computes the DR's five core metrics (Agent QPS amplification, Input/Output token TPS, GPU VRAM = weights + KV cache, prefix-cache breakeven, RAG vector-DB RAM) and JUDGES feasibility against budgets: FEASIBLE iff every budgeted criterion within budget, else INFEASIBLE + binding constraint + macro architecture lever (GPU cards / tensor-parallel / vector-DB RAM) AND micro code lever (PagedAttention / FP8 KV / RadixAttention / SQ8 / DiskANN). Report-only — spec/budgets admitted by human, the buy/enable decision is human. Projects to a self-correcting-loop runnable scorecard."
+command: none   # DOC-ONLY entry — run src/capacity_kernel.py directly (estimate/judge/scorecard/state)
+triggers: [capacity-estimation, 容量估算, agent-capacity, vram-sizing, kv-cache, token-throughput, gpu-sizing, capacity-feasibility]
+launch_precondition: "!`python3 --version`"
+wiring: LIVE   # static + qa 50/50 + runtime selftest exit 0 (20 cases: faithful DR worked-example + judge discrimination + cross-kernel scorecard projection). runtime-proven.
+```
+
+```yaml sandbox
+name: fullstack-design-judge
+exposed_capability: "DR-distilled fullstack-design Judge rubric (10 macro architecture axes + 11 micro code axes, runnable/rubric kind split) for a distributed frontend/backend + BFF + AI-agent-async system DESIGN or CODE. The only new thing is the rubric — DECIDE is delegated to the self-correcting-loop kernel (requires: [self-correcting-loop]; CONSUMED:self-correcting-loop printed in the runtime trace). Two-tier flow guides macro architecture down to micro code. Report-only — judged artifact + rubric admitted by human, FINAL accepted by human."
+command: none   # DOC-ONLY entry — run src/judge_selftest.py directly (composes the self-correcting-loop kernel)
+triggers: [fullstack-design-judge, 分散式設計評判, BFF設計評判, 前後端架構評判, 系統設計rubric, design-judge]
+launch_precondition: "!`python3 --version`"
+wiring: LIVE   # static + runtime judge_selftest exit 0 (7 cases incl. CONSUMED:self-correcting-loop + combined==macro∪micro + ITERATING/focus). runtime-proven.
 ```
